@@ -59,7 +59,7 @@ DeviceLogonEvents
 ```
 ## 🔐 Top Failed Logon Attempts
 
-![Top Failed Logon Attempts](./TopFailedLogon.png)
+![Top Failed Logon Attempts](images/TopFailedLogon.png)
 
 
 Check if any of the top offending IPs succeeded:
@@ -95,7 +95,7 @@ DeviceLogonEvents
 ```
 ## ✅ Successful Logons by Account
 
-![Successful Logon Events](./SuccessfulLogonDevice.png)
+![Successful Logon Events](images/SuccessfulLogonDevice.png)
 
 - Both successful logon events were from same authorized user
 - Account: `labuser`
@@ -104,7 +104,7 @@ DeviceLogonEvents
 
 ## 🌐 Successful IP Address Origin
 
-![Successful IP Location](./SuccessfulIP.png)
+![Successful IP Location](images/SuccessfulIP.png)
 
 ## ✅ The IP address correlated with an authorized user account and confirmed as the source of both valid logon events.
 ---
