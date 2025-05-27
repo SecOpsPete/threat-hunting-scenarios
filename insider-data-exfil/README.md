@@ -115,6 +115,7 @@ The outbound HTTPS connection to GitHub’s raw content delivery domain strongly
 
 ## 🔧 Recommendations
 - Immediately isolate the system.
+- Consider implementing alerts for excessive .zip activity.
 - Escalate the incident to the Incident Response (IR) team.
 - Preserve evidence: scripts, command lines, ZIP files, and timelines.
 - Audit similar behavior across other endpoints.
