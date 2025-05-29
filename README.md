@@ -4,6 +4,9 @@ A collection of hands-on threat hunting labs built around Microsoft Defender for
 
 ## 🔍 Included Labs
 
+- 🛡️ [PwnCrypt Ransomware Detection](./pwncrypt-ransomware-detection/README.md)  
+  Detects file encryption activity, delivery via PowerShell, and execution of the `pwncrypt.ps1` ransomware script using Microsoft Defender telemetry and MITRE ATT&CK mapping.
+
 - 📦 [Insider Data Exfiltration](./insider-data-exfil/README.md)  
   Investigates PowerShell and 7-Zip usage to stage and exfiltrate sensitive employee data.
 
