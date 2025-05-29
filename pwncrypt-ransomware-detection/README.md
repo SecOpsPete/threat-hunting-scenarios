@@ -189,4 +189,4 @@ DeviceFileEvents
 
 ---
 
-> 🧠 **Reflection:** This lab reinforces the value of combining behavior-based hunting with IoC pivoting. You didn't just chase filenames — you confirmed attack chains and validated real-world impact using Defender logs. Excellent work, analyst!
+> 🧠 **Reflection:** This lab reinforces the value of combining behavior-based hunting with IoC pivoting. 
