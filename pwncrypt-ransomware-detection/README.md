@@ -89,17 +89,6 @@ DeviceProcessEvents
 
 ✅ This confirms download & execution of the ransomware payload.
 
----
-
-## 🧼 Noise You Can Ignore
-
-These processes are routine and not tied to malicious activity:
-
-- `UsoClient.exe`, `TiWorker.exe`, `sppsvc.exe`, `MpCmdRun.exe`
-- `TrustedInstaller.exe`, `RunCommandExtension.exe`, `FindVolume.exe`
-- `SearchProtocolHost.exe`, `taskhostw.exe`, etc.
-
----
 
 ## 🚨 Malicious Events to Prioritize
 
