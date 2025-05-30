@@ -40,7 +40,7 @@ DeviceFileEvents
 | order by Timestamp desc
 ```
 
-### 🖼️ Image 1: File Discovery via DeviceFileEvents
+### 🖼️ File Discovery via DeviceFileEvents
 ![File Discovery via DeviceFileEvents](./images/1.png)
 
 ---
@@ -55,7 +55,7 @@ DeviceProcessEvents
 | order by Timestamp desc
 ```
 
-### 🖼️ Image 2: Timeline Analysis of Process Activity
+### 🖼️ Timeline Analysis of Process Activity
 ![Timeline Analysis of Process Activity](./images/2.png)
 
 ---
@@ -73,7 +73,7 @@ DeviceProcessEvents
 | order by Timestamp desc
 ```
 
-### 🖼️ Image 3: Focused Process Filtering Around IOC Time
+### 🖼️ Focused Process Filtering Around IOC Time
 ![Focused Process Filtering Around IOC Time](./images/3.png)
 
 ---
@@ -113,7 +113,7 @@ DeviceFileEvents
 | order by Timestamp desc
 ```
 
-### 🖼️ Image 4: File Impact Traced from pwncrypt.ps1
+### 🖼️ File Impact Traced from pwncrypt.ps1
 ![File Impact Traced from pwncrypt.ps1](./images/4.png)
 
 ---
@@ -141,7 +141,7 @@ DeviceFileEvents
 
 🎯 Goal: Detect presence of typical ransom notes.
 
-### 🖼️ Image 5: Scan for Dropped Ransom Notes
+### 🖼️ Scan for Dropped Ransom Notes
 ![Scan for Dropped Ransom Notes](./images/5.png)
 
 ⚠️ No ransom notes were dropped on this system.
