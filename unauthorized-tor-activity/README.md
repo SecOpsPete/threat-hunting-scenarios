@@ -159,8 +159,7 @@ This investigation confirms that user **azurepeter** intentionally downloaded, s
 
 ---
 
-## 🧠 Reflection
+> 🧠 **Reflection:** This lab highlights the importance of correlating file activity, process execution, and network telemetry during an investigation. While standalone indicators might appear benign, their intersection revealed a clear pattern of misuse.
 
-This lab highlights the importance of correlating file activity, process execution, and network telemetry during an investigation. While standalone indicators might appear benign, their intersection revealed a clear pattern of misuse. The use of silent install switches, anonymization tools, and file renaming reinforces how critical behavioral baselining and multi-source detection strategies are in identifying insider risks and evasive techniques.
 
 ---
