@@ -4,6 +4,9 @@ A collection of hands-on threat hunting labs built around Microsoft Defender for
 
 ## 🔍 Included Labs
 
+- 🕵️‍♂️ **[Unauthorized TOR Activity Detection](./unauthorized-tor-activity)**  
+  Simulates detection of unauthorized TOR browser usage on a managed device. Correlates file, process, and network events to identify anonymization behavior, bypass techniques, and user intent to evade security monitoring.
+
 - 🛡️ [PwnCrypt Ransomware Detection](./pwncrypt-ransomware-detection/README.md)  
   Detects file encryption activity, delivery via PowerShell, and execution of the `pwncrypt.ps1` ransomware script using Microsoft Defender telemetry and MITRE ATT&CK mapping.
 
