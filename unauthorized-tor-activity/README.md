@@ -2,6 +2,11 @@
 
 Detects unsanctioned TOR browser installation and usage by correlating endpoint telemetry, process execution, and outbound network traffic. This lab demonstrates how security analysts can use Microsoft Defender for Endpoint (MDE) data and Sentinel analytics to investigate anonymization tools that may be used to evade monitoring and exfiltrate data.
 
+<div align="center">
+  <img src="./images/tor.png" alt="TOR Logo" width="30%">
+</div>
+
+
 ---
 
 ## 🛠️ Scenario
