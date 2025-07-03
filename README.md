@@ -4,6 +4,9 @@ A collection of hands-on threat hunting labs built around Microsoft Defender for
 
 ## 🔍 Included Labs
 
+- 🕵️‍♂️ **[The Invisible RDP](./the-invisible-rdp)**  
+  Investigates a suspected RDP connection from a public IP that bypassed normal telemetry. Uses Defender for Endpoint and KQL to uncover `svchost.exe` abuse, LOLBin persistence via `wermgr.exe`, and stealthy outbound HTTPS activity suggestive of post-compromise exfiltration.
+
 - 🕵️‍♂️ **[Unauthorized TOR Activity Detection](./unauthorized-tor-activity)**  
   Simulates detection of unauthorized TOR browser usage on a managed device. Correlates file, process, and network events to identify anonymization behavior, bypass techniques, and user intent to evade security monitoring.
 
