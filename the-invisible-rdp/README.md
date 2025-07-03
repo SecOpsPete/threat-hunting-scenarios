@@ -39,7 +39,7 @@ While reviewing sign-in data, I manually pivoted into the **"Observed in organiz
 
 > `svchost.exe accepted connection from 88.214.25.19:57706 to 10.0.0.5:3389`
 
-**InitialEvidence1.png**_
+![Initial evidence of inbound RDP from external IP](./InitialEvidence1.png)
 
 - Port `3389` is used for **Remote Desktop Protocol (RDP)**.
 - The connection was **inbound from the public internet**, suggesting **RDP was exposed externally**.
@@ -89,7 +89,7 @@ DeviceProcessEvents
 | project Timestamp, FileName, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine
 ```
 
-**SpawnChildProcesses.png**_
+![svchost.exe spawning child processes](./SpawnChildProcesses.png)
 
 This revealed that `svchost.exe -k netsvcs -p` had launched multiple child processes, including:
 
@@ -112,7 +112,7 @@ DeviceNetworkEvents
 | sort by Timestamp desc
 ```
 
-**WermgrConnections.png**_
+![wermgr.exe network connections over HTTPS](./WermgrConnections.png)
 
 Results showed repeated `ConnectionSuccess` events on port `443` (HTTPS) to public IPs including:
 - `20.189.173.20`
@@ -135,7 +135,7 @@ DeviceProcessEvents
 | project Timestamp, ProcessCommandLine, InitiatingProcessCommandLine, ReportId
 ```
 
-**WermgrExecutions.png**_
+![Repeated executions of wermgr.exe](./WermgrExecutions.png)
 
 Findings:
 - `wermgr.exe -upload` was executed **235 times**
