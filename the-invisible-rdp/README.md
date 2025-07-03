@@ -57,12 +57,6 @@ Despite the successful RDP event shown in the portal, I was unable to locate it 
 ```kql
 DeviceNetworkEvents
 | where DeviceName == "windows-target-1"
-| where IPAddresses == "20.81.145.71"
-```
-
-```kql
-DeviceNetworkEvents
-| where DeviceName == "windows-target-1"
 | where RemoteIP == "88.214.25.19"
 | where RemotePort == 3389 or LocalPort == 3389
 ```
