@@ -38,7 +38,7 @@ Goals:
 
 While reviewing Defender portal data, I manually pivoted into the **"Observed in organization"** tab for IP address `88.214.25.19`. There, I found the following:
 
-> `svchost.exe accepted RDP connection from 88.214.25.19:57706 to 10.0.0.5:3389`
+> `windows-target-1 svchost.exe accepted RDP connection from 88.214.25.19:57706 to 10.0.0.5:3389`
 
 ![Initial evidence of inbound RDP from external IP](./InitialEvidence1.png)
 
