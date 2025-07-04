@@ -1,4 +1,4 @@
-# 🔍 The Invisible RDP: Suspected RDP Compromise and LOLBin-Based Exfiltration
+# 🔍 The Invisible RDP: Suspected RDP Compromise
 
 **Analyst:** Peter Van Rossum  
 **Date Range Investigated:** July 2–3, 2025  
