@@ -12,9 +12,9 @@
 
 This investigation was conducted within the context of a CyberRange lab environment. While the behaviors observed (including external RDP access, suspicious use of `svchost.exe`, and repeated execution of `wermgr.exe`) strongly resemble post-compromise activity seen in real-world attacks, it is possible that:
 
-- Some or all of these behaviors are part of a **deliberate red team simulation** or threat emulation setup
-- The system was **intentionally exposed** to simulate insecure RDP posture
-- Certain anomalies (e.g., missing telemetry or SmartSignal-only detections) may reflect **lab configurations** or simulated data gaps
+- Some or all of these behaviors are part of a **deliberate red team simulation** or threat emulation setup  
+- The system was **intentionally exposed** to simulate insecure RDP posture  
+- Certain anomalies (e.g., missing telemetry or SmartSignal-only detections) may reflect **lab configurations** or simulated data gaps  
 
 However, based on the observed persistence, volume, and pattern of activity, this behavior warrants investigation and is documented here for its instructional and analytical value. Findings are framed with these limitations in mind.
 
@@ -25,9 +25,9 @@ However, based on the observed persistence, volume, and pattern of activity, thi
 This threat hunt was initiated after a series of failed login attempts were observed targeting `windows-target-1`. While performing routine investigation in Microsoft Defender for Endpoint, a manual pivot on one of the external IP addresses involved in the login attempts (`88.214.25.19`) revealed an **unexpected successful connection**.
 
 The goal of this hunt was to determine:
-- Whether a public IP address had successfully established an RDP session with the internal host
-- Whether any signs of post-compromise activity or persistence were present
-- How this behavior may have evaded standard Defender telemetry
+- Whether a public IP address had successfully established an RDP session with the internal host  
+- Whether any signs of post-compromise activity or persistence were present  
+- How this behavior may have evaded standard Defender telemetry  
 
 ---
 
@@ -41,34 +41,12 @@ While reviewing sign-in data, I manually pivoted into the **"Observed in organiz
 
 ![Initial evidence of inbound RDP from external IP](./InitialEvidence1.png)
 
-- Port `3389` is used for **Remote Desktop Protocol (RDP)**.
-- The connection was **inbound from the public internet**, suggesting **RDP was exposed externally**.
-- `svchost.exe` was recorded as the receiving process, which is atypical — RDP sessions are normally handled by `TermService` and related components, not `svchost.exe` directly.
+- Port `3389` is used for **Remote Desktop Protocol (RDP)**.  
+- The connection was **inbound from the public internet**, suggesting **RDP was exposed externally**.  
+- `svchost.exe` was recorded as the receiving process, which is atypical — RDP sessions are normally handled by `TermService` and related components, not `svchost.exe` directly.  
 
 **Why this is concerning:**  
 The involvement of `svchost.exe` in accepting a remote RDP connection strongly suggested **process misuse, injection, or lateral movement activity**, especially in combination with an external IP and no interactive login session recorded.
-
----
-## 🔐 3. Sequence of Failed RDP Logon Attempts from `88.214.25.19`
-
-In order to assess whether the successful RDP connection from `88.214.25.19` was preceded by brute-force behavior, I queried the Defender `DeviceLogonEvents` table for failed authentication attempts originating from that IP.
-
-```kql
-DeviceLogonEvents
-| where DeviceName == "windows-target-1"
-| where RemoteIP == "88.214.25.19"
-| where ActionType == "LogonFailed"
-| project Timestamp, RemoteIP, DeviceName, ActionType
-| order by Timestamp desc
-```
-
-The results (shown below) reveal **a clear burst of failed login attempts** on **July 2, 2025**, between **09:06 and 09:16 UTC**, all originating from `88.214.25.19`:
-
-![Failed RDP logons from external IP](./FailedLogins.png)
-
-> This sequence strongly suggests **brute-force activity**, with the external actor attempting multiple RDP logins in rapid succession. The presence of a **successful inbound RDP connection shortly afterward**, handled suspiciously by `svchost.exe`, adds weight to the likelihood of a **successful credential compromise**.
-
-This evidence supports the conclusion that the attacker first **enumerated or guessed credentials** via RDP before pivoting to post-exploitation activity using LOLBins.
 
 ---
 
@@ -93,9 +71,30 @@ This absence of telemetry led to the hypothesis that this was a **cloud-side cor
 
 ---
 
-## 🕳️ 7. Absence of Successful Login Events from Attacker IP
+### 🔐 3. Sequence of Failed RDP Logon Attempts from `88.214.25.19`
 
-Despite Defender's portal surfacing an RDP connection from the external IP `88.214.25.19` to port `3389` on `windows-target-1`, **no successful login was recorded** in the `DeviceLogonEvents` table for that IP address.
+To assess whether the successful RDP connection from `88.214.25.19` was preceded by brute-force behavior, I queried the Defender `DeviceLogonEvents` table for failed authentication attempts from that IP:
+
+```kql
+DeviceLogonEvents
+| where DeviceName == "windows-target-1"
+| where RemoteIP == "88.214.25.19"
+| where ActionType == "LogonFailed"
+| project Timestamp, RemoteIP, DeviceName, ActionType
+| order by Timestamp desc
+```
+
+The results (shown below) reveal **a clear burst of failed login attempts** on **July 2, 2025**, between **09:06 and 09:16 UTC**, all originating from `88.214.25.19`:
+
+![Failed RDP logons from external IP](./FailedLogins.png)
+
+> This sequence strongly suggests **brute-force activity**, with the external actor attempting multiple RDP logins in rapid succession. The presence of a **successful inbound RDP connection shortly afterward**, handled suspiciously by `svchost.exe`, adds weight to the likelihood of a **successful credential compromise**.
+
+---
+
+### 🕳️ 4. Absence of Successful Login Events from Attacker IP
+
+Despite Defender's portal surfacing an RDP connection from `88.214.25.19` to port `3389`, **no successful login was recorded** in the `DeviceLogonEvents` table:
 
 ```kql
 DeviceLogonEvents
@@ -108,11 +107,9 @@ This query returned **no results**, which is unexpected behavior in a legitimate
 
 > This absence supports the hypothesis that the attacker may have used **non-interactive logon methods**, **token theft**, or **process injection** to gain access without triggering a standard logon event. Combined with the presence of a `svchost.exe` network listener on port 3389, this points to **post-compromise activity using stealth techniques**.
 
-This discrepancy further increases confidence that the event reflects malicious behavior, not benign administrator activity or normal remote access.
-
 ---
 
-### ✅ 4. Tracing svchost.exe Behavior
+### ✅ 5. Tracing svchost.exe Behavior
 
 To explore whether `svchost.exe` was being abused, I looked at its child process activity:
 
@@ -128,15 +125,15 @@ DeviceProcessEvents
 
 This revealed that `svchost.exe -k netsvcs -p` had launched multiple child processes, including:
 
-- `wermgr.exe -upload`
-- `TiWorker.exe`
-- `MicrosoftEdgeUpdate.exe`
+- `wermgr.exe -upload`  
+- `TiWorker.exe`  
+- `MicrosoftEdgeUpdate.exe`  
 
 These binaries are **signed Windows binaries (LOLBins)** — and while they can be legitimate, their parent process and timing raised red flags.
 
 ---
 
-### ✅ 5. Identification of `wermgr.exe` as a Potential Exfiltration Tool
+### ✅ 6. Identification of `wermgr.exe` as a Potential Exfiltration Tool
 
 Given the presence of `wermgr.exe`, I queried for its network activity:
 
@@ -150,15 +147,15 @@ DeviceNetworkEvents
 ![wermgr.exe network connections over HTTPS](./WermgrConnections.png)
 
 Results showed repeated `ConnectionSuccess` events on port `443` (HTTPS) to public IPs including:
-- `20.189.173.20`
-- `52.168.117.173`
-- `104.208.16.94`
+- `20.189.173.20`  
+- `52.168.117.173`  
+- `104.208.16.94`  
 
 Some IPs resolve to Microsoft infrastructure, but this is a known attacker evasion technique — **blend in by using cloud-hosted destinations**.
 
 ---
 
-### ✅ 6. Confirmation of Persistent wermgr.exe Execution
+### ✅ 7. Confirmation of Persistent wermgr.exe Execution
 
 To verify persistence and scale of this activity:
 
@@ -173,9 +170,9 @@ DeviceProcessEvents
 ![Repeated executions of wermgr.exe](./WermgrExecutions.png)
 
 Findings:
-- `wermgr.exe -upload` was executed **235 times**
-- Each instance was launched by `svchost.exe -k netsvcs -p`
-- Activity spanned from **July 2 at 01:34 UTC** through **July 3**
+- `wermgr.exe -upload` was executed **235 times**  
+- Each instance was launched by `svchost.exe -k netsvcs -p`  
+- Activity spanned from **July 2 at 01:34 UTC** through **July 3**  
 
 This strongly suggests a **persistence mechanism or scheduled task** was used to automate this process — potentially to exfiltrate data or beacon to a C2 server.
 
@@ -183,11 +180,11 @@ This strongly suggests a **persistence mechanism or scheduled task** was used to
 
 ## 🧠 Why This Is a High-Fidelity Threat Signal
 
-- The attack appears to begin with a **successful external RDP connection** to an internet-exposed host
-- No interactive sign-in logs were present, suggesting use of **non-standard RDP tunneling or injection**
-- Defender’s **SmartSignal** surfaced the activity via the portal, but no raw telemetry was available via standard KQL tables
-- Use of `svchost.exe` as the listener and `wermgr.exe` as the exfiltration vector **aligns with known tradecraft** for stealthy post-exploitation behavior
-- The volume and consistency of `wermgr.exe` activity indicates automation, not user-driven behavior
+- The attack appears to begin with a **successful external RDP connection** to an internet-exposed host  
+- No interactive sign-in logs were present, suggesting use of **non-standard RDP tunneling or injection**  
+- Defender’s **SmartSignal** surfaced the activity via the portal, but no raw telemetry was available via standard KQL tables  
+- Use of `svchost.exe` as the listener and `wermgr.exe` as the exfiltration vector **aligns with known tradecraft** for stealthy post-exploitation behavior  
+- The volume and consistency of `wermgr.exe` activity indicates automation, not user-driven behavior  
 
 ---
 
@@ -195,10 +192,10 @@ This strongly suggests a **persistence mechanism or scheduled task** was used to
 
 This investigation uncovered strong signs of post-compromise activity, including:
 
-- External RDP session from a suspicious IP
-- Masquerading of service behavior under `svchost.exe`
-- Repeated use of LOLBins (`wermgr.exe`) for outbound communication
-- Absence of telemetry, implying deliberate evasion or detection via backend logic
+- External RDP session from a suspicious IP  
+- Masquerading of service behavior under `svchost.exe`  
+- Repeated use of LOLBins (`wermgr.exe`) for outbound communication  
+- Absence of telemetry, implying deliberate evasion or detection via backend logic  
 
 These are strong indicators of a **compromised host under attacker control**, using **living-off-the-land techniques** to maintain persistence and exfiltrate data.
 
@@ -206,13 +203,12 @@ These are strong indicators of a **compromised host under attacker control**, us
 
 ## 🧩 Recommendations (if it is/were an actual compromise in a real-world situation)
 
-- Isolate `windows-target-1` from the network 
-- Perform memory capture and full disk imaging for forensic review
-- Audit all autoruns, services, scheduled tasks, and WMI persistence points
-- Rotate credentials associated with the machine
-- Block RDP at the NSG/firewall unless explicitly needed
+- Isolate `windows-target-1` from the network  
+- Perform memory capture and full disk imaging for forensic review  
+- Audit all autoruns, services, scheduled tasks, and WMI persistence points  
+- Rotate credentials associated with the machine  
+- Block RDP at the NSG/firewall unless explicitly needed  
 
 ---
 
 _Report generated by Peter Van Rossum, July 3, 2025_
-
