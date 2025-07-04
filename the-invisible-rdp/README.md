@@ -109,7 +109,7 @@ This query returned **no results**, which is unexpected behavior in a legitimate
 
 ---
 
-### 🧪 8. Absence of Outbound Network Activity from `wermgr.exe` During Attack Window
+### 🧪 5. Absence of Outbound Network Activity from `wermgr.exe` During Attack Window
 
 To determine whether `wermgr.exe` was being used for exfiltration or C2 communication, I queried all outbound network connections initiated by `wermgr.exe` between **July 2 and July 3, 2025** — the confirmed timeframe of the RDP-based compromise.
 
@@ -156,45 +156,27 @@ DeviceProcessEvents
 > Although `wermgr.exe` typically uploads telemetry to Microsoft, **no outbound network connections** from `wermgr.exe` were observed during this period (see Section 5). This suggests the process was **either misused in a non-network capacity** or **failed to complete its exfiltration stage**.
 
 **Possible interpretations include:**
-- **Local staging or reconnaissance** prior to exfiltration
-- **A decoy binary** used to emulate normal activity and evade detection
-- **Persistence testing** by launching a LOLBin repeatedly without triggering alerts
+- **Local staging or reconnaissance** prior to exfiltration  
+- **A decoy binary** used to emulate normal activity and evade detection  
+- **Persistence testing** by launching a LOLBin repeatedly without triggering alerts  
 - An **incomplete or interrupted post-exploitation chain**
 
 Regardless of intent, the frequency, parent process (`svchost.exe`), and timing of execution strongly indicate that `wermgr.exe` was **deliberately invoked** — not part of normal Windows telemetry behavior.
 
 ---
 
-### ✅ 7. Confirmation of Persistent wermgr.exe Execution
+## 🧠 7. Why This Is a High-Fidelity Threat Signal
 
-To verify persistence and scale of this activity:
+Several combined signals point to a likely compromise, even in the absence of full telemetry:
 
-```kql
-DeviceProcessEvents
-| where DeviceName == "windows-target-1"
-| where FileName == "wermgr.exe"
-| sort by Timestamp desc
-| project Timestamp, ProcessCommandLine, InitiatingProcessCommandLine, ReportId
-```
+- The attack began with a **successful inbound RDP connection** from a suspicious external IP (`88.214.25.19`)  
+- No interactive sign-in logs were recorded, suggesting use of **token theft, session hijacking, or process injection**  
+- The RDP session was handled by `svchost.exe`, an unusual receiving process that may indicate **masquerading or process hollowing**  
+- Defender’s **SmartSignal detection** surfaced the event, while raw telemetry remained absent — a hallmark of **evasion-aware tradecraft**  
+- `wermgr.exe`, a known LOLBin, was **executed 235 times over two days** by `svchost.exe`, consistent with **automated persistence testing or staging**  
+- While no network exfiltration was observed from `wermgr.exe` during the attack window, its execution frequency and parent process still reflect **deliberate misuse**
 
-![Repeated executions of wermgr.exe](./WermgrExecutions.png)
-
-Findings:
-- `wermgr.exe -upload` was executed **235 times**  
-- Each instance was launched by `svchost.exe -k netsvcs -p`  
-- Activity spanned from **July 2 at 01:34 UTC** through **July 3**  
-
-This strongly suggests a **persistence mechanism or scheduled task** was used to automate this process — potentially to exfiltrate data or beacon to a C2 server.
-
----
-
-## 🧠 Why This Is a High-Fidelity Threat Signal
-
-- The attack appears to begin with a **successful external RDP connection** to an internet-exposed host  
-- No interactive sign-in logs were present, suggesting use of **non-standard RDP tunneling or injection**  
-- Defender’s **SmartSignal** surfaced the activity via the portal, but no raw telemetry was available via standard KQL tables  
-- Use of `svchost.exe` as the listener and `wermgr.exe` as the exfiltration vector **aligns with known tradecraft** for stealthy post-exploitation behavior  
-- The volume and consistency of `wermgr.exe` activity indicates automation, not user-driven behavior  
+Taken together, these patterns strongly resemble known **living-off-the-land (LotL) tactics** used by attackers to maintain stealthy, persistent control of a compromised system.
 
 ---
 
@@ -204,10 +186,10 @@ This investigation uncovered strong signs of post-compromise activity, including
 
 - External RDP session from a suspicious IP  
 - Masquerading of service behavior under `svchost.exe`  
-- Repeated use of LOLBins (`wermgr.exe`) for outbound communication  
+- Repeated use of LOLBins (`wermgr.exe`) during the compromise window  
 - Absence of telemetry, implying deliberate evasion or detection via backend logic  
 
-These are strong indicators of a **compromised host under attacker control**, using **living-off-the-land techniques** to maintain persistence and exfiltrate data.
+These are strong indicators of a **compromised host under attacker control**, using **living-off-the-land techniques** to maintain persistence and conceal activity.
 
 ---
 
