@@ -103,6 +103,36 @@ This query returned **no results**, which is unexpected behavior in a legitimate
 
 ---
 
+### 🧪 5. Process Connected to Attacker IP
+
+To conclude the investigation, a final correlation was performed to confirm whether any process on `windows-target-1` directly communicated with the suspicious external IP `88.214.25.19`.
+
+Using the `DeviceNetworkEvents` table, I filtered for all connections to that IP during the investigation window. The results revealed a single, suspicious connection:
+
+| Timestamp              | Process                | Command Line                          | Remote Port | Local Port |
+|------------------------|------------------------|----------------------------------------|-------------|------------|
+| July 2, 2025 09:06:09 UTC | svchost.exe           | `svchost.exe -k NetworkService`        | 57706       | 3389       |
+
+This confirms that:
+- The attacker IP **successfully connected via RDP (port 3389)**.
+- The session was handled by **`svchost.exe`**, which is **not the expected process** for normal RDP handling.
+- The connection occurred **immediately after a burst of failed login attempts** from the same IP.
+
+This strengthens the likelihood that the system was compromised via RDP, and the attacker may have used **stealth techniques** to maintain access without triggering standard login telemetry.
+
+### 🔍 KQL Query Used
+
+```kql
+DeviceNetworkEvents
+| where DeviceName == "windows-target-1"
+| where RemoteIP == "88.214.25.19"
+| where Timestamp between (datetime(2025-07-02T00:00:00Z) .. datetime(2025-07-03T23:59:59Z))
+| project Timestamp, InitiatingProcessCommandLine, RemotePort, LocalPort
+| order by Timestamp asc
+```
+
+---
+
 ## 🧠 5. Why This Is a High-Fidelity Threat Signal
 
 Several combined signals point to a likely compromise, even in the absence of full telemetry:
