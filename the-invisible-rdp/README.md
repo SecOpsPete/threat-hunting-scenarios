@@ -10,24 +10,25 @@
 
 ## ⚠️ Limitations & Considerations
 
-This investigation was conducted within the context of a CyberRange lab environment. While the behaviors observed (including external RDP access and suspicious use of `svchost.exe`) strongly resemble post-compromise activity seen in real-world attacks, it is possible that:
+This investigation was conducted within a CyberRange lab environment. While the behaviors observed — including external RDP access and suspicious use of `svchost.exe` — closely resemble real-world post-compromise activity, it is important to consider the following:
 
-- Some or all of these behaviors are part of a **deliberate red team simulation** or threat emulation setup  
-- The system was **intentionally exposed** to simulate insecure RDP posture  
-- Certain anomalies (e.g., missing telemetry or SmartSignal-only detections) may reflect **lab configurations** or simulated data gaps  
+- The system may have been **intentionally exposed** to simulate insecure RDP posture  
+- Some behaviors may reflect a **red team simulation** or **threat emulation scenario**  
+- Missing telemetry or SmartSignal-only detections may be due to **lab configurations or data constraints**
 
-However, based on the observed persistence, volume, and pattern of activity, this behavior warrants investigation and is documented here for its instructional and analytical value. Findings are framed with these limitations in mind.
+Nonetheless, the persistence, timing, and pattern of activity observed suggest malicious intent. This investigation is documented for its instructional and analytical value within those constraints.
 
 ---
 
 ## 🎯 Objective
 
-This threat hunt was initiated after a series of failed login attempts were observed targeting `windows-target-1`. While performing routine investigation in Microsoft Defender for Endpoint, a manual pivot on one of the external IP addresses involved in the login attempts (`88.214.25.19`) revealed an **unexpected successful connection**.
+This threat hunt began after a series of failed login attempts were observed targeting `windows-target-1`. While pivoting within Microsoft Defender for Endpoint, an unexpected successful connection from the same external IP (`88.214.25.19`) was identified.
 
-The goal of this hunt was to determine:
-- Whether a public IP address had successfully established an RDP session with the internal host  
-- Whether any signs of post-compromise activity or persistence were present  
-- How this behavior may have evaded standard Defender telemetry  
+The goals of this hunt were to determine:
+
+- Whether a public IP had successfully established an RDP session with the internal host  
+- Whether post-compromise activity or persistence was present  
+- How this behavior may have bypassed standard Defender telemetry  
 
 ---
 
@@ -35,24 +36,24 @@ The goal of this hunt was to determine:
 
 ### ✅ 1. Discovery of Suspicious Inbound RDP Connection
 
-While reviewing sign-in data, I manually pivoted into the **"Observed in organization"** tab for IP address `88.214.25.19` in the Defender portal. There, I found this event:
+While reviewing Defender portal data, I manually pivoted into the **"Observed in organization"** tab for IP address `88.214.25.19`. There, I found the following:
 
 > `svchost.exe accepted connection from 88.214.25.19:57706 to 10.0.0.5:3389`
 
 ![Initial evidence of inbound RDP from external IP](./InitialEvidence1.png)
 
-- Port `3389` is used for **Remote Desktop Protocol (RDP)**.  
-- The connection was **inbound from the public internet**, suggesting **RDP was exposed externally**.  
-- `svchost.exe` was recorded as the receiving process, which is atypical — RDP sessions are normally handled by `TermService` and related components, not `svchost.exe` directly.  
+- Port `3389` is used for **Remote Desktop Protocol (RDP)**  
+- The connection was **inbound from the public internet**, suggesting **exposed RDP**  
+- `svchost.exe` handled the connection — which is atypical, as RDP is normally managed by `TermService`
 
 **Why this is concerning:**  
-The involvement of `svchost.exe` in accepting a remote RDP connection strongly suggested **process misuse, injection, or lateral movement activity**, especially in combination with an external IP and no interactive login session recorded.
+The use of `svchost.exe` to accept an external RDP session raises red flags for **process masquerading, injection, or lateral movement**, especially in the absence of a standard logon event.
 
 ---
 
 ### 🔍 2. Attempts to Corroborate the Event in KQL
 
-Despite the successful RDP event shown in the portal, I was unable to locate it in any Advanced Hunting table:
+Although the portal showed a successful RDP connection, it could not be located via KQL:
 
 ```kql
 DeviceNetworkEvents
@@ -61,13 +62,13 @@ DeviceNetworkEvents
 | where RemotePort == 3389 or LocalPort == 3389
 ```
 
-This absence of telemetry led to the hypothesis that this was a **cloud-side correlation detection**, likely generated by Microsoft Defender’s SmartSignals or backend enrichment — **not direct endpoint telemetry**.
+This supports the hypothesis that this was a **cloud-side correlation event**, likely generated by Defender’s **SmartSignals** or backend threat intelligence — not standard endpoint telemetry.
 
 ---
 
-### 🔐 3. Sequence of Failed RDP Logon Attempts from `88.214.25.19`
+### 🔐 3. Sequence of Failed RDP Logon Attempts
 
-To assess whether the successful RDP connection from `88.214.25.19` was preceded by brute-force behavior, I queried the Defender `DeviceLogonEvents` table for failed authentication attempts from that IP:
+I queried `DeviceLogonEvents` to examine prior login behavior from the same IP:
 
 ```kql
 DeviceLogonEvents
@@ -78,17 +79,17 @@ DeviceLogonEvents
 | order by Timestamp desc
 ```
 
-The results (shown below) reveal **a clear burst of failed login attempts** on **July 2, 2025**, between **09:06 and 09:16 UTC**, all originating from `88.214.25.19`:
+The results revealed a **burst of failed login attempts** on **July 2, 2025**, between **09:06 and 09:16 UTC**, all from `88.214.25.19`.
 
 ![Failed RDP logons from external IP](./FailedLogins.png)
 
-> This sequence strongly suggests **brute-force activity**, with the external actor attempting multiple RDP logins in rapid succession. The presence of a **successful inbound RDP connection shortly afterward**, handled suspiciously by `svchost.exe`, adds weight to the likelihood of a **successful credential compromise**.
+> This pattern strongly suggests **brute-force activity**, immediately preceding the successful connection. Combined with the use of `svchost.exe`, this increases the likelihood of a **credential compromise or unauthorized session reuse**.
 
 ---
 
-### 🕳️ 4. Absence of Successful Login Events from Attacker IP
+### 🕳️ 4. Absence of Successful Logon Events
 
-Despite Defender's portal surfacing an RDP connection from `88.214.25.19` to port `3389`, **no successful login was recorded** in the `DeviceLogonEvents` table:
+To validate the session further, I searched for any recorded **successful logons** from that IP:
 
 ```kql
 DeviceLogonEvents
@@ -97,30 +98,15 @@ DeviceLogonEvents
 | where ActionType == "LogonSuccess"
 ```
 
-This query returned **no results**, which is unexpected behavior in a legitimate RDP session.
+This returned **no results** — an anomaly for a legitimate RDP session.
 
-> This absence supports the hypothesis that the attacker may have used **non-interactive logon methods**, **token theft**, or **process injection** to gain access without triggering a standard logon event. Combined with the presence of a `svchost.exe` network listener on port 3389, this points to **post-compromise activity using stealth techniques**.
+> This absence supports the theory that the attacker gained access via **non-interactive methods**, such as **token theft** or **process injection**, allowing remote control without generating a traditional login event.
 
 ---
 
 ### 🧪 5. Process Connected to Attacker IP
 
-To conclude the investigation, a final correlation was performed to confirm whether any process on `windows-target-1` directly communicated with the suspicious external IP `88.214.25.19`.
-
-Using the `DeviceNetworkEvents` table, I filtered for all connections to that IP during the investigation window. The results revealed a single, suspicious connection:
-
-| Timestamp              | Process                | Command Line                          | Remote Port | Local Port |
-|------------------------|------------------------|----------------------------------------|-------------|------------|
-| July 2, 2025 09:06:09 UTC | svchost.exe           | `svchost.exe -k NetworkService`        | 57706       | 3389       |
-
-This confirms that:
-- The attacker IP **successfully connected via RDP (port 3389)**.
-- The session was handled by **`svchost.exe`**, which is **not the expected process** for normal RDP handling.
-- The connection occurred **immediately after a burst of failed login attempts** from the same IP.
-
-This strengthens the likelihood that the system was compromised via RDP, and the attacker may have used **stealth techniques** to maintain access without triggering standard login telemetry.
-
-### 🔍 KQL Query Used
+To conclude the investigation, I searched for any process on `windows-target-1` that directly communicated with `88.214.25.19`:
 
 ```kql
 DeviceNetworkEvents
@@ -131,40 +117,51 @@ DeviceNetworkEvents
 | order by Timestamp asc
 ```
 
+This revealed a single connection:
+
+| Timestamp              | Process                | Command Line                          | Remote Port | Local Port |
+|------------------------|------------------------|----------------------------------------|-------------|------------|
+| July 2, 2025 09:06:09 UTC | svchost.exe           | `svchost.exe -k NetworkService`        | 57706       | 3389       |
+
+> This confirms that `svchost.exe` — not a standard RDP handler — was the receiving process for a successful RDP session with the attacker IP. The timing aligned precisely with the earlier brute-force attempts, reinforcing the hypothesis of post-compromise access.
+
 ---
 
-## 🧠 5. Why This Is a High-Fidelity Threat Signal
+## 🧠 6. Why This Is a High-Fidelity Threat Signal
 
-Several combined signals point to a likely compromise, even in the absence of full telemetry:
+Several factors converge to make this a strong indicator of compromise:
 
-- The attack began with a **successful inbound RDP connection** from a suspicious external IP (`88.214.25.19`)  
-- No interactive sign-in logs were recorded, suggesting use of **token theft, session hijacking, or process injection**  
-- The RDP session was handled by `svchost.exe`, an unusual receiving process that may indicate **masquerading or process hollowing**  
-- Defender’s **SmartSignal detection** surfaced the event, while raw telemetry remained absent — a hallmark of **evasion-aware tradecraft**
+- **Successful inbound RDP** from a suspicious external IP  
+- **No corresponding login success** recorded in telemetry  
+- **Unusual process (`svchost.exe`)** handled the RDP session  
+- The event was only surfaced through **backend SmartSignal correlation** — suggesting **evasion-aware techniques**  
+- The connection occurred **immediately following a brute-force attempt**
 
-Taken together, these patterns strongly resemble known **living-off-the-land (LotL) tactics** used by attackers to maintain stealthy, persistent control of a compromised system.
+Together, these indicators point to **living-off-the-land (LotL) tactics** and **stealthy post-compromise persistence** using native system processes and credential abuse.
 
 ---
 
 ## 📌 Conclusion
 
-This investigation uncovered strong signs of post-compromise activity, including:
+This investigation uncovered strong signals of a likely RDP-based compromise involving:
 
-- External RDP session from a suspicious IP  
-- Masquerading of service behavior under `svchost.exe`  
-- Absence of telemetry, implying deliberate evasion or detection via backend logic  
+- External session initiation from a known brute-force IP  
+- Anomalous use of `svchost.exe` to handle RDP  
+- Absence of standard authentication or telemetry trails
 
-These are strong indicators of a **compromised host under attacker control**, using **living-off-the-land techniques** to maintain persistence and conceal activity.
+These findings suggest the host was under unauthorized control using stealthy, native techniques that bypass traditional detections.
 
 ---
 
-## 🧩 Recommendations (if it is/were an actual compromise in a real-world situation)
+## 🧩 Recommendations (for real-world incidents)
 
-- Isolate `windows-target-1` from the network  
-- Perform memory capture and full disk imaging for forensic review  
-- Audit all autoruns, services, scheduled tasks, and WMI persistence points  
-- Rotate credentials associated with the machine  
-- Block RDP at the NSG/firewall unless explicitly needed  
+If this were a production system, the following steps would be recommended:
+
+- **Immediately isolate `windows-target-1` from the network**  
+- **Capture memory and create full disk images** for forensic review  
+- **Audit autoruns, services, WMI persistence, and scheduled tasks**  
+- **Reset all credentials associated with the device**  
+- **Harden or disable RDP** via firewall/NSG rules and enforce MFA where RDP is required  
 
 ---
 
