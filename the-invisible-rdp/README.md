@@ -134,25 +134,34 @@ This absence of telemetry is a useful boundary: it helps eliminate false positiv
 
 ---
 
-### ✅ 6. Identification of `wermgr.exe` as a Potential Exfiltration Tool
+### ✅ 6. Confirmation of Persistent `wermgr.exe` Execution
 
-Given the presence of `wermgr.exe`, I queried for its network activity:
+To assess the scale and purpose of `wermgr.exe` activity, I queried all executions of the binary on `windows-target-1`.
 
 ```kql
-DeviceNetworkEvents
-| where InitiatingProcessFileName == "wermgr.exe"
+DeviceProcessEvents
 | where DeviceName == "windows-target-1"
+| where FileName == "wermgr.exe"
 | sort by Timestamp desc
+| project Timestamp, ProcessCommandLine, InitiatingProcessCommandLine, ReportId
 ```
 
-![wermgr.exe network connections over HTTPS](./WermgrConnections.png)
+![Repeated executions of wermgr.exe](./WermgrExecutions.png)
 
-Results showed repeated `ConnectionSuccess` events on port `443` (HTTPS) to public IPs including:
-- `20.189.173.20`  
-- `52.168.117.173`  
-- `104.208.16.94`  
+**Findings:**
+- `wermgr.exe -upload` was executed **235 times**
+- All instances were launched by `svchost.exe -k netsvcs -p`
+- The activity spanned from **July 2 at 01:34 UTC** through **July 3**
 
-Some IPs resolve to Microsoft infrastructure, but this is a known attacker evasion technique — **blend in by using cloud-hosted destinations**.
+> Although `wermgr.exe` typically uploads telemetry to Microsoft, **no outbound network connections** from `wermgr.exe` were observed during this period (see Section 5). This suggests the process was **either misused in a non-network capacity** or **failed to complete its exfiltration stage**.
+
+**Possible interpretations include:**
+- **Local staging or reconnaissance** prior to exfiltration
+- **A decoy binary** used to emulate normal activity and evade detection
+- **Persistence testing** by launching a LOLBin repeatedly without triggering alerts
+- An **incomplete or interrupted post-exploitation chain**
+
+Regardless of intent, the frequency, parent process (`svchost.exe`), and timing of execution strongly indicate that `wermgr.exe` was **deliberately invoked** — not part of normal Windows telemetry behavior.
 
 ---
 
