@@ -10,25 +10,25 @@
 
 ## ⚠️ Limitations & Considerations
 
-This investigation was conducted within a CyberRange lab environment. While the behaviors observed — including external RDP access and suspicious use of `svchost.exe` — closely resemble real-world post-compromise activity, it is important to consider the following:
+This investigation occurred in a CyberRange lab. While activity like external RDP access and suspicious `svchost.exe` usage mirrors real-world compromise, consider:
 
-- The system may have been **intentionally exposed** to simulate insecure RDP posture  
-- Some behaviors may reflect a **red team simulation** or **threat emulation scenario**  
-- Missing telemetry or SmartSignal-only detections may be due to **lab configurations or data constraints**
+- The system may have been **intentionally exposed**
+- Behaviors may stem from **red team simulation**
+- **Telemetry gaps** may result from lab settings
 
-Nonetheless, the persistence, timing, and pattern of activity observed suggest malicious intent. This investigation is documented for its instructional and analytical value within those constraints.
+Still, the timing and persistence suggest possible malicious behavior. This report reflects findings within that context.
 
 ---
 
 ## 🎯 Objective
 
-This threat hunt began after a series of failed login attempts were observed targeting `windows-target-1`. While pivoting within Microsoft Defender for Endpoint, an unexpected successful connection from the same external IP (`88.214.25.19`) was identified.
+The hunt began after repeated failed logins to `windows-target-1`, followed by a successful RDP connection from external IP `88.214.25.19`.
 
-The goals of this hunt were to determine:
+Goals:
 
-- Whether a public IP had successfully established an RDP session with the internal host  
-- Whether post-compromise activity or persistence was present  
-- How this behavior may have bypassed standard Defender telemetry  
+- Confirm external RDP access to the internal host  
+- Identify signs of post-compromise or persistence  
+- Assess how this activity evaded standard Defender telemetry
 
 ---
 
