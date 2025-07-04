@@ -109,27 +109,28 @@ This query returned **no results**, which is unexpected behavior in a legitimate
 
 ---
 
-### ✅ 5. Tracing svchost.exe Behavior
+### 🧪 8. Absence of Outbound Network Activity from `wermgr.exe` During Attack Window
 
-To explore whether `svchost.exe` was being abused, I looked at its child process activity:
+To determine whether `wermgr.exe` was being used for exfiltration or C2 communication, I queried all outbound network connections initiated by `wermgr.exe` between **July 2 and July 3, 2025** — the confirmed timeframe of the RDP-based compromise.
 
 ```kql
-DeviceProcessEvents
+DeviceNetworkEvents
 | where DeviceName == "windows-target-1"
-| where Timestamp between (datetime(2025-07-02 08:30:00) .. datetime(2025-07-02 10:00:00))
-| where InitiatingProcessFileName == "svchost.exe"
-| project Timestamp, FileName, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessCommandLine
+| where InitiatingProcessFileName == "wermgr.exe"
+| where Timestamp between (datetime(2025-07-02) .. datetime(2025-07-03 23:59:59))
+| where RemotePort == 443
 ```
 
-![svchost.exe spawning child processes](./SpawnChildProcesses.png)
+> **Result:**  
+> No matching events were found.
 
-This revealed that `svchost.exe -k netsvcs -p` had launched multiple child processes, including:
+This suggests that while `wermgr.exe` was repeatedly executed during the attack window, it **did not initiate any observable outbound network traffic** at that time. All previously recorded connections to Microsoft infrastructure occurred **prior to the attack window**, and appear consistent with normal Windows telemetry.
 
-- `wermgr.exe -upload`  
-- `TiWorker.exe`  
-- `MicrosoftEdgeUpdate.exe`  
+**Interpretation:**  
+- If `wermgr.exe` was part of the attack chain, its use may have been **limited to local staging, file operations, or reconnaissance**  
+- Alternatively, outbound traffic may have been **obfuscated, tunneled through another process**, or **missed due to logging limitations**
 
-These binaries are **signed Windows binaries (LOLBins)** — and while they can be legitimate, their parent process and timing raised red flags.
+This absence of telemetry is a useful boundary: it helps eliminate false positives and refocuses the investigation on other processes potentially responsible for exfiltration or C2 behavior.
 
 ---
 
