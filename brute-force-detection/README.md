@@ -83,8 +83,6 @@ DeviceLogonEvents
 
 ## ✅ Verified Only 2 Successful Logins During 7 Day Internet Exposure
 
----
-
 Check Valid Logons by Known Account:
 ```kql
 DeviceLogonEvents
