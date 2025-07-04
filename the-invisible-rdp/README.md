@@ -49,6 +49,28 @@ While reviewing sign-in data, I manually pivoted into the **"Observed in organiz
 The involvement of `svchost.exe` in accepting a remote RDP connection strongly suggested **process misuse, injection, or lateral movement activity**, especially in combination with an external IP and no interactive login session recorded.
 
 ---
+## 🔐 3. Sequence of Failed RDP Logon Attempts from `88.214.25.19`
+
+In order to assess whether the successful RDP connection from `88.214.25.19` was preceded by brute-force behavior, I queried the Defender `DeviceLogonEvents` table for failed authentication attempts originating from that IP.
+
+```kql
+DeviceLogonEvents
+| where DeviceName == "windows-target-1"
+| where RemoteIP == "88.214.25.19"
+| where ActionType == "LogonFailed"
+| project Timestamp, RemoteIP, DeviceName, ActionType
+| order by Timestamp desc
+```
+
+The results (shown below) reveal **a clear burst of failed login attempts** on **July 2, 2025**, between **09:06 and 09:16 UTC**, all originating from `88.214.25.19`:
+
+![Failed RDP logons from external IP](./FailedLogins.png)
+
+> This sequence strongly suggests **brute-force activity**, with the external actor attempting multiple RDP logins in rapid succession. The presence of a **successful inbound RDP connection shortly afterward**, handled suspiciously by `svchost.exe`, adds weight to the likelihood of a **successful credential compromise**.
+
+This evidence supports the conclusion that the attacker first **enumerated or guessed credentials** via RDP before pivoting to post-exploitation activity using LOLBins.
+
+---
 
 ### 🔍 2. Attempts to Corroborate the Event in KQL
 
