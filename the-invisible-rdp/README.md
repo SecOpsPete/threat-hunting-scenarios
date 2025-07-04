@@ -93,6 +93,25 @@ This absence of telemetry led to the hypothesis that this was a **cloud-side cor
 
 ---
 
+## 🕳️ 7. Absence of Successful Login Events from Attacker IP
+
+Despite Defender's portal surfacing an RDP connection from the external IP `88.214.25.19` to port `3389` on `windows-target-1`, **no successful login was recorded** in the `DeviceLogonEvents` table for that IP address.
+
+```kql
+DeviceLogonEvents
+| where DeviceName == "windows-target-1"
+| where RemoteIP == "88.214.25.19"
+| where ActionType == "LogonSuccess"
+```
+
+This query returned **no results**, which is unexpected behavior in a legitimate RDP session.
+
+> This absence supports the hypothesis that the attacker may have used **non-interactive logon methods**, **token theft**, or **process injection** to gain access without triggering a standard logon event. Combined with the presence of a `svchost.exe` network listener on port 3389, this points to **post-compromise activity using stealth techniques**.
+
+This discrepancy further increases confidence that the event reflects malicious behavior, not benign administrator activity or normal remote access.
+
+---
+
 ### ✅ 4. Tracing svchost.exe Behavior
 
 To explore whether `svchost.exe` was being abused, I looked at its child process activity:
