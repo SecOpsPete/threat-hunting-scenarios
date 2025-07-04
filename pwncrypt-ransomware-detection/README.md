@@ -89,6 +89,7 @@ DeviceProcessEvents
 
 ✅ This confirms download & execution of the ransomware payload.
 
+---
 
 ## 🚨 Malicious Events to Prioritize
 
@@ -125,6 +126,11 @@ DeviceFileEvents
 - 🔹 **13:20:14 UTC** – `powershell.exe` downloads `pwncrypt.ps1`
 - 🔹 **13:20:17 UTC** – Execution via `ExecutionPolicy Bypass`
 - 🔹 **13:20:30+ UTC** – Files encrypted with `_pwncrypt.csv` suffix
+- 🔹 **Files Dropped to Desktop:**
+  - `3698_EmployeeRecords_pwncrypt.csv`
+  - `8955_CompanyFinancials_pwncrypt.csv`
+  - `9543_ProjectList_pwncrypt.csv`
+  - `________decryption-instructions` (ransom note)
 - 🔹 **Process Chain:** `cmd.exe` → `powershell.exe`
 - 🔹 **Affected Files:** EmployeeRecords, ProjectList, CompanyFinancials
 
@@ -135,16 +141,14 @@ DeviceFileEvents
 ```kql
 DeviceFileEvents
 | where DeviceName == "pvr-hunting2"
-| where FileName in~ ("README.txt", "HOW_TO_DECRYPT.txt", "decrypt_instructions.html")
+| where FileName has "decrypt" or FileName contains "instruction"
 | project Timestamp, FolderPath, FileName, InitiatingProcessFileName
 ```
-
-🎯 Goal: Detect presence of typical ransom notes.
 
 ### 🖼️ Scan for Dropped Ransom Notes
 ![Scan for Dropped Ransom Notes](./images/5.png)
 
-⚠️ No ransom notes were dropped on this system.
+✅ **Confirmed:** Ransom note file named `________decryption-instructions` was dropped on the desktop alongside encrypted files.
 
 ---
 
@@ -166,8 +170,9 @@ DeviceFileEvents
 ### ✅ Summary of Findings:
 - **Confirmed**: Download and execution of `pwncrypt.ps1`
 - **Detected**: File encryption events post-execution
-- **No Persistence**: No registry, services, or ransom notes found
+- **Confirmed**: Ransom note dropped to desktop
 - **Delivery Method**: PowerShell from `cmd.exe` with bypass flag
+- **No Persistence**: No evidence of registry or scheduled task persistence
 
 ---
 
@@ -189,4 +194,4 @@ DeviceFileEvents
 
 ---
 
-> 🧠 **Reflection:** This lab reinforces the value of combining behavior-based hunting with IoC pivoting. 
+> 🧠 **Reflection:** This lab reinforces the importance of endpoint visibility, command-line logging, and early detection of file encryption behavior. Dropped artifacts — like the desktop ransom note — offer strong indicators for rapid triage and containment.
