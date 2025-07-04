@@ -91,7 +91,7 @@ DeviceLogonEvents
 
 The results revealed a **burst of failed login attempts** on **July 2, 2025**, between **09:06 and 09:16 UTC**, all from `88.214.25.19`.
 
-![Failed RDP logons from external IP](./FailedLogins.png)
+![Failed RDP logons from external IP](./FailedLogins1.png)
 
 > This pattern strongly suggests **brute-force activity**, immediately preceding the successful connection. Combined with the use of `svchost.exe`, this increases the likelihood of a **credential compromise or unauthorized session reuse**.
 
