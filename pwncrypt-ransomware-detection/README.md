@@ -146,7 +146,7 @@ DeviceFileEvents
 ```
 
 ### 🖼️ Scan for Dropped Ransom Notes
-![Scan for Dropped Ransom Notes](./images/5.png)
+<!--![Scan for Dropped Ransom Notes](./images/5.png)--->
 
 ✅ **Confirmed:** Ransom note file named `________decryption-instructions` was dropped on the desktop alongside encrypted files.
 
