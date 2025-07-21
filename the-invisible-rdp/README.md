@@ -163,7 +163,7 @@ These findings suggest the host was under unauthorized control using stealthy, n
 
 ---
 
-## 🧩 Recommendations (for real-world incidents)
+## 🧩 Recommendations
 
 If this were a production system, the following steps would be recommended:
 
