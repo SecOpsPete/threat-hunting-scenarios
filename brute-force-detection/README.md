@@ -111,6 +111,7 @@ DeviceLogonEvents
 ## ✅ Verified Only 2 Successful Logins During 7 Day Internet Exposure
 
 Check Valid Logons by Known Account:
+
 ```kql
 DeviceLogonEvents
 | where DeviceName == "windows-target-1"
@@ -118,6 +119,20 @@ DeviceLogonEvents
 | where ActionType == "LogonSuccess"
 //| where AccountName == "labuser" //add this after in second running of this query
 ```
+<br>
+Check for Failed Logons from Known Account
+
+```kql
+DeviceLogonEvents
+| where DeviceName == "windows-target-1"
+| where AccountName == "labuser"
+| where LogonType == "Network"
+| where ActionType == "LogonFailed"
+```
+<br>
+Verified that NO Known Account Logons failed
+
+
 ## ✅ Successful Logons by Account
 
 ![Successful Logon Events](images/SuccessfulLogonDevice.png)
