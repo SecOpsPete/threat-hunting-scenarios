@@ -24,7 +24,7 @@ During routine maintenance, the security team was tasked with investigating virt
 - **Hypothesis**: Publicly exposed VMs without account lockout policies were vulnerable to brute-force login attacks.
 - <br>
 
-## ✅ 'IsInternetFacing' KQL function details
+## ✅ 'IsInternetFacing' Stored KQL function details
 
 When leveraging the `IsInternetFacing` function in Kusto Query Language (KQL), ensure the query includes checks for commonly exposed network services. Enumerate and validate these critical internet-facing services to proactively identify potential security exposures or misconfigurations:
 
