@@ -120,7 +120,7 @@ DeviceLogonEvents
 //| where AccountName == "labuser" //add this after in second running of this query
 ```
 <br>
-Check for Failed Logons from Known Account
+Check for Failed Logons from Known Account - verified that NO Known Account Logons failed
 
 ```kql
 DeviceLogonEvents
@@ -129,8 +129,8 @@ DeviceLogonEvents
 | where LogonType == "Network"
 | where ActionType == "LogonFailed"
 ```
-<br>
-Verified that NO Known Account Logons failed
+
+
 
 
 ## ✅ Successful Logons by Account
