@@ -102,6 +102,7 @@ DeviceLogonEvents
 Check for Any Successful Logons 
 ```kql
 DeviceLogonEvents
+| where DeviceName == "windows-target-1"
 | where LogonType has_any("Network", "Interactive", "RemoteInteractive", "Unlock")
 | where ActionType == "LogonSuccess"
 | order by Timestamp desc
