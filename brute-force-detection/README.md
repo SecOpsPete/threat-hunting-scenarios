@@ -116,7 +116,7 @@ DeviceLogonEvents
 | where DeviceName == "windows-target-1"
 | where LogonType == "Network"
 | where ActionType == "LogonSuccess"
-| where AccountName == "labuser"
+//| where AccountName == "labuser" //add this after in second running of this query
 ```
 ## ✅ Successful Logons by Account
 
