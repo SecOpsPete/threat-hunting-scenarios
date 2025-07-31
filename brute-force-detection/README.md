@@ -104,7 +104,7 @@ Check for Any Successful Logons
 DeviceLogonEvents
 | where LogonType has_any("Network", "Interactive", "RemoteInteractive", "Unlock")
 | where ActionType == "LogonSuccess"
-| where RemoteIP has_any(RemoteIPsInQuestion)
+| order by Timestamp desc
 ```
 
 ## ✅ Verified Only 2 Successful Logins During 7 Day Internet Exposure
