@@ -114,7 +114,7 @@ Check Valid Logons by Known Account:
 ```kql
 DeviceLogonEvents
 | where DeviceName == "windows-target-1"
-| where LogonType == "Network"
+| where LogonType == "Network"  //Limited LoginType to simplify search as Network will capture Internet-based logons
 | where ActionType == "LogonSuccess"
 //| where AccountName == "labuser" //add this after in second running of this query
 ```
