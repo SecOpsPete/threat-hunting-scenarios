@@ -120,6 +120,11 @@ DeviceLogonEvents
 //| where AccountName == "labuser" //add this after in second running of this query
 ```
 <br>
+
+## ✅ Successful Logons by Account
+
+![Successful Logon Events](images/SuccessfulLogonDevice.png)
+
 Check for Failed Logons from Known Account - verified that NO Known Account Logons failed
 
 ```kql
@@ -130,19 +135,21 @@ DeviceLogonEvents
 | where ActionType == "LogonFailed"
 ```
 
-
-
-
-## ✅ Successful Logons by Account
-
-![Successful Logon Events](images/SuccessfulLogonDevice.png)
-
 - Both successful logon events were from same authorized user
 - Account: `labuser`
 - Number of failed logons: 0
 - IP address origin was verified and authorized
 
 ## 🌐 Successful IP Address Origin
+
+```kql
+DeviceLogonEvents
+| where DeviceName == "windows-target-1"
+| where AccountName == "labuser"
+| where LogonType == "Network"
+| where ActionType == "LogonFailed"
+| summarize LogonCount = count() by DeviceName, ActionType, AccountName, RemoteIP
+```
 
 ![Successful IP Location](images/SuccessfulIP.png)
 
