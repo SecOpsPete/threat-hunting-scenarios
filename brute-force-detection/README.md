@@ -22,6 +22,32 @@ During routine maintenance, the security team was tasked with investigating virt
   - `DeviceInfo`
   - `DeviceLogonEvents`
 - **Hypothesis**: Publicly exposed VMs without account lockout policies were vulnerable to brute-force login attacks.
+- <br>
+
+## ✅ 'IsInternetFacing' KQL function details
+
+When leveraging the `IsInternetFacing` function in Kusto Query Language (KQL), ensure the query includes checks for commonly exposed network services. Enumerate and validate these critical internet-facing services to proactively identify potential security exposures or misconfigurations:
+
+* **DNS (Domain Name System)** – Port 53 TCP/UDP
+* **DHCP (Dynamic Host Configuration Protocol)** – Ports 67/68 UDP
+* **HTTP (Hypertext Transfer Protocol)** – Port 80 TCP
+* **HTTPS (Hypertext Transfer Protocol Secure)** – Port 443 TCP
+* **SMTP (Simple Mail Transfer Protocol)** – Port 25 TCP
+* **FTP (File Transfer Protocol)** – Ports 20/21 TCP
+* **SSH (Secure Shell)** – Port 22 TCP
+* **Telnet** – Port 23 TCP
+* **RDP (Remote Desktop Protocol)** – Port 3389 TCP
+* **LDAP (Lightweight Directory Access Protocol)** – Port 389 TCP
+* **LDAPS (LDAP Secure)** – Port 636 TCP
+* **IMAP (Internet Message Access Protocol)** – Ports 143 (IMAP) / 993 (IMAPS) TCP
+* **POP3 (Post Office Protocol version 3)** – Ports 110 (POP3) / 995 (POP3S) TCP
+* **VPN gateways (IKE/IPSec)** – Ports 500/4500 UDP
+* **SMB/CIFS (Server Message Block)** – Port 445 TCP
+* **Database servers (e.g., MSSQL/MySQL)** – Ports 1433 (MSSQL), 3306 (MySQL) TCP
+* **Network Management (SNMP)** – Ports 161/162 UDP
+* **Web Proxy servers** – Ports 8080, 3128 TCP
+
+Including these services explicitly within your KQL queries helps in rapidly identifying and securing potential external attack surfaces.
 
 ---
 
