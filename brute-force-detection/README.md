@@ -1,5 +1,5 @@
 
-# ⚔️ Threat Hunting Lab: Devices Accidentally Exposed to the Internet
+# ⚔️ Devices Accidentally Exposed to the Internet
 
 ## 🧰 Technologies Used
 
