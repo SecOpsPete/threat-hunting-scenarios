@@ -22,7 +22,7 @@ DeviceFileEvents
 
 ![ZIP File Creation Event](images/zipDeviceFileEvents1.png)
 
-I found a ZIP archive that was created with a name matching a sensitive dataset: `employee-data-temp20250527135920.csv`. This initial finding confirms that file archiving activity occurred and helps anchor my timeline for deeper investigation into related processes and network behavior.
+I found a ZIP archive that was created with a name matching a sensitive dataset: `employee-data-20250527135920.csv`. This initial finding confirms that file archiving activity occurred and helps anchor my timeline for deeper investigation into related processes and network behavior.
 
 ---
 
