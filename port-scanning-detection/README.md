@@ -76,7 +76,7 @@ DeviceNetworkEvents
 
 ## 4 – Investigation
 
-PowerShell script `portscan.ps1` was observed executing at the time of the scan:
+I pivoted to the DeviceProcessEvents table to see if I could see anything suspicious around the time the port scan started. I noticed an obvioius PowerShell script `portscan.ps1` executing at the time of the scan:
 
 ```kql
 let VMName = "dereck";
