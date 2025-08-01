@@ -3,9 +3,9 @@
 ## 🧪 Investigation Scenario
 
 ### 🔐 Goal:
-Investigate a newly discovered ransomware strain known as **PwnCrypt**. This strain uses a PowerShell-based payload to encrypt files on infected systems, prepending `.pwncrypt` to the original file extensions. For example, `hello.txt` becomes `hello.pwncrypt.txt`.
+I was tasked to investigate a newly discovered ransomware strain known as **PwnCrypt**. This strain uses a PowerShell-based payload to encrypt files on infected systems, prepending `.pwncrypt` to the original file extensions. For example, `hello.txt` becomes `hello.pwncrypt.txt`.
 
-The CISO has raised concerns about potential lateral spread due to immature defenses and a lack of security awareness training. Your task is to determine whether the ransomware has affected any systems, how it was delivered, and whether it established persistence.
+The CISO has raised concerns about potential lateral spread due to immature defenses and a lack of security awareness training. My task was to determine whether the ransomware has affected any systems, how it was delivered, and whether it established persistence.
 
 ---
 
@@ -61,7 +61,7 @@ Using a confirmed execution timestamp, I zoomed out to view all surrounding proc
 
 ![Timeline Analysis of Process Activity](./images/2.png)
 
-🧠 **Insight:** Establishing temporal context revealed the entry vector and highlighted early-stage behavior.
+Establishing a timeline relationship revealed the entry vector and highlighted early-stage behavior.
 
 ---
 
