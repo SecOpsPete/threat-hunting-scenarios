@@ -46,8 +46,9 @@ This query establishes the timeline of processes running on the endpoint around 
 <br>
 
 ---
-## 🎯 Step 3: Filtered Relevant Process Events
-After identifying the ZIP creation and surrounding activity, this step narrows the focus to three specific processes likely involved in staging or facilitating exfiltration. By isolating powershell.exe, 7z2408-x64.exe, and 7z.exe, I expose the tools used to script, install, and compress data — helping me validate the attacker’s method and intent:
+## 🎯 Step 3: Isolating Key Processes
+
+After identifying the ZIP file creation and surrounding activity, this step focuses on three key processes likely involved in data staging or exfiltration. By filtering for powershell.exe, 7z.exe, and 7z2408-x64.exe, I isolate the tools used to script actions, install utilities, and compress data — revealing the attacker’s method and intent.
 
 ```kql
 DeviceProcessEvents
@@ -60,7 +61,7 @@ DeviceProcessEvents
 
 ![Command Line Activity of Involved Processes](images/ProcessesIsolated3.png)
 
-These process details validate that scripting and compression utilities were executed in close sequence, pointing to a coordinated attempt to extract and package data.
+The event sequence confirms a tightly coupled execution chain: scripting via PowerShell, installation of 7-Zip, and compression using 7z.exe. This coordinated flow strengthens the case for an intentional data staging and exfiltration attempt.
 
 ---
 
@@ -103,6 +104,9 @@ The outbound HTTPS connection to GitHub’s raw content delivery domain strongly
 - 🧾 Commands and behavior align with known MITRE ATT&CK techniques.
 
 ## 🔧 Recommendations
+
+I forwarded the findings to management and recommended expanding the scope of the investigation to capture other data exfiltration incidents associated with this user (USB exfil, malware delivery, etc.). I also recommended the following:
+
 - Immediately isolate the system.
 - Consider implementing alerts for excessive .zip activity.
 - Escalate the incident to the Incident Response (IR) team.
