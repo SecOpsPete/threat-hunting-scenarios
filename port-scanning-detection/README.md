@@ -99,6 +99,8 @@ DeviceProcessEvents
 ---
 
 ### 🔐 Executed by SYSTEM Account
+When the device was correated to the user's AccountName, it was found that the portscan script was launched by the System account - not expected behavior or an activity originating from system administrators.  
+
 
 ```kql
 let VMName = "dereck";
@@ -115,7 +117,7 @@ DeviceProcessEvents
 
 ### 🧼 Containment Status
 
-Device was isolated and scanned. No malware was detected, but the system remains quarantined for reimaging.
+As such, the device was isolated and scanned in Defender for Endpoint. No malware was detected, but the system remains quarantined for reimaging.
 
 ---
 
