@@ -10,14 +10,14 @@ A collection of hands-on threat hunting labs built around Microsoft Defender for
 - 🕵️‍♂️ **[Unauthorized TOR Activity Detection](./unauthorized-tor-activity)**  
   Simulates detection of unauthorized TOR browser usage on a managed device. Correlates file, process, and network events to identify anonymization behavior, bypass techniques, and user intent to evade security monitoring.
 
-- 🛡️ [PwnCrypt Ransomware Detection](./pwncrypt-ransomware-detection/README.md)  
+- 🛡️ **[Zero-Day Ransomware Detection](./pwncrypt-ransomware-detection/README.md)**  
   Detects file encryption activity, delivery via PowerShell, and execution of the `pwncrypt.ps1` ransomware script using Microsoft Defender telemetry and MITRE ATT&CK mapping.
 
-- 📦 [Insider Data Exfiltration](./insider-data-exfil/README.md)  
+- 📦 **[Insider Data Exfiltration](./insider-data-exfil/README.md)**  
   Investigates PowerShell and 7-Zip usage to stage and exfiltrate sensitive employee data.
 
-- 🔐 [Brute Force Detection](./brute-force-detection/README.md)  
+- 🔐 **[Brute Force Detection](./brute-force-detection/README.md)**  
   Detects suspicious authentication failures and patterns that indicate password guessing or brute force attacks.
 
-- 🌐 [Port Scanning Detection](./port-scanning-detection/README.md)  
+- 🌐 **[Internal Port Scanning Detection](./port-scanning-detection/README.md)**  
   Identifies network reconnaissance activity within internal IP ranges using PowerShell port scanning.
