@@ -1,5 +1,5 @@
 
-# ⚔️ Devices Accidentally Exposed to the Internet
+# ⚔️ Devices Exposed to Brute Force Attack
 
 ## 🧰 Technologies Used
 
