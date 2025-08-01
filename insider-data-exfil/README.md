@@ -1,7 +1,7 @@
 # 🔍 Threat Hunting Lab: Suspicious Insider Exfiltration Attempt
 
 ## 🧭 Investigation Scenario
-**Context:** An employee named *John Doe*, recently placed on a performance improvement plan (PIP), displayed hostile behavior. Management suspects John may attempt to steal proprietary company data. As a security analyst, your goal is to investigate John’s actions on his assigned device (`pvr-hunting`) using Microsoft Defender for Endpoint (MDE).
+**Context:** An employee named *John Doe*, recently placed on a performance improvement plan (PIP), displayed hostile behavior. Management suspects John may attempt to steal proprietary company data. As a security analyst, my goal was to investigate John’s actions on his assigned device (`pvr-hunting`) using Microsoft Defender for Endpoint (MDE).
 
 ### 🎯 Hypothesis
 Given John’s elevated privileges, he may:
@@ -11,7 +11,7 @@ Given John’s elevated privileges, he may:
 ---
 
 ## 📊 Step 1: File Archiving Detection
-This step identifies the creation of ZIP files on the target system, focusing on filenames that suggest potential staging of sensitive data. By querying DeviceFileEvents and filtering by .zip extensions, we begin to establish a baseline of archiving activity and flag any anomalies for further investigation:
+This step identifies the creation of ZIP files on the target system, focusing on filenames that suggest potential staging of sensitive data. By querying DeviceFileEvents and filtering by .zip extensions, I began to establish a baseline of archiving activity and flag any anomalies for further investigation:
 
 ```kql
 DeviceFileEvents
