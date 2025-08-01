@@ -1,4 +1,4 @@
-# 🕵️‍♂️ Threat Hunting Lab: Zero-Day Ransomware (PwnCrypt) Outbreak
+# 🕵️‍♂️ Zero-Day Ransomware (PwnCrypt) Outbreak
 
 ## 🧪 Investigation Scenario
 
