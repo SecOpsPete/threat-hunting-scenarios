@@ -27,7 +27,7 @@ I found a ZIP archive that was created with a name matching a sensitive dataset:
 ---
 
 ## 🧮 Step 2: Process Timeline Correlation
-Using the ZIP file's creation time (`2025-05-27T13:59:31Z`), searched for correlated processes:
+Using the ZIP file's creation time (`2025-05-27T13:59:31Z`), I then searched for correlated processes within +/- 1 minute using the DeviceProcessEvents table:
 
 ```kql
 let specificTime = datetime(2025-05-27T13:59:31.421716Z);
