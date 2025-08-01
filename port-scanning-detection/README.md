@@ -1,4 +1,4 @@
-# 🕵️‍♂️ Threat Hunting Lab – Internal PowerShell Port Scanning Activity
+# 🕵️‍♂️ Internal PowerShell Port Scanning Activity
 
 ## 🧰 Technologies Used
 
