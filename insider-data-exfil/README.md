@@ -22,7 +22,7 @@ DeviceFileEvents
 
 ![ZIP File Creation Event](images/zipDeviceFileEvents1.png)
 
-I found a ZIP archive that was created with a name matching a sensitive dataset: `employee-data-temp20250527135920.csv`. This initial finding confirms that file archiving activity occurred and helps anchor our timeline for deeper investigation into related processes and network behavior.
+I found a ZIP archive that was created with a name matching a sensitive dataset: `employee-data-temp20250527135920.csv`. This initial finding confirms that file archiving activity occurred and helps anchor my timeline for deeper investigation into related processes and network behavior.
 
 ---
 
@@ -40,7 +40,7 @@ DeviceProcessEvents
 
 ![Timeline of PowerShell and Zip Activity](images/ProcessCorrelation2.png)
 
-This query establishes the timeline of processes running on the endpoint around the time of the suspicious ZIP archive creation. By narrowing the window to one minute before and after the archive event, we begin to reveal a chain of activity. This step is critical to correlating user actions with file manipulation and prepares the foundation for identifying potential exfiltration behavior.
+This query establishes the timeline of processes running on the endpoint around the time of the suspicious ZIP archive creation. By narrowing the window to one minute before and after the archive event, I begin to reveal a chain of activity. This step is critical to correlating user actions with file manipulation and prepares the foundation for identifying potential exfiltration behavior.
 
 ```kql
 let specificTime = datetime(2025-05-27T13:59:31.421716Z);
@@ -53,12 +53,12 @@ DeviceFileEvents
 ```
 ![Detected Silent Download of 7zip](images/SilentDownload.png)
 
-Discovered silent installation of 7-Zip (`7z2408-x64.exe`) followed by compression via `7z.exe`. The process timeline provides critical insight into how the attacker leveraged PowerShell to silently install 7-Zip and initiate data staging. This supports the hypothesis of intentional preparation for exfiltration.
+I discovered silent installation of 7-Zip (`7z2408-x64.exe`) followed by compression via `7z.exe`. The process timeline provides critical insight into how the attacker leveraged PowerShell to silently install 7-Zip and initiate data staging. This supports the hypothesis of intentional preparation for exfiltration.
 
 ---
 
 ## 🎯 Step 3: Filtered Relevant Process Events
-After identifying the ZIP creation and surrounding activity, this step narrows the focus to three specific processes likely involved in staging or facilitating exfiltration. By isolating powershell.exe, 7z2408-x64.exe, and 7z.exe, we expose the tools used to script, install, and compress data — helping us validate the attacker’s method and intent:
+After identifying the ZIP creation and surrounding activity, this step narrows the focus to three specific processes likely involved in staging or facilitating exfiltration. By isolating powershell.exe, 7z2408-x64.exe, and 7z.exe, I expose the tools used to script, install, and compress data — helping me validate the attacker’s method and intent:
 
 ```kql
 DeviceProcessEvents
