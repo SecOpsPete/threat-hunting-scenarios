@@ -27,7 +27,7 @@ I found a ZIP archive that was created with a name matching a sensitive dataset:
 ---
 
 ## 🧮 Step 2: Process Timeline Correlation
-Using the ZIP file's creation time (`2025-05-27T13:59:31Z`), I then searched for correlated processes within +/- 1 minute using the DeviceProcessEvents table:
+Using the ZIP file's creation time (`2025-05-27T13:59:31Z`), I then searched for correlated processes within +/-1 minute using the DeviceProcessEvents table:
 
 ```kql
 let specificTime = datetime(2025-05-27T13:59:31.421716Z);
@@ -44,6 +44,19 @@ DeviceProcessEvents
 
 This query establishes the timeline of processes running on the endpoint around the time of the suspicious ZIP archive creation. By narrowing the window to one minute before and after the .zip archive event, I begin to reveal a chain of activity that involved a powershell scipt silently install 7zip and used it to archive employee data. This step is critical to correlating user actions with file manipulation and prepares the foundation for identifying potential exfiltration behavior.
 <br>
+
+---
+
+I searched +/-5 minutes around that time period for any evidence of exfiltration from the network (DeviceNetworkEvents) but didn't find any logs that indicated that data exfiltration in the network logs. 
+
+```kql
+let specificTime = datetime(2025-05-27T13:59:31.421716Z);
+let VMName = "pvr-hunting";
+DeviceNetworkEvents
+| where Timestamp between ((specificTime - 5m) .. (specificTime + 5m))
+| where DeviceName == VMName
+| order by Timestamp desc
+```
 
 ---
 
