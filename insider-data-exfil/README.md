@@ -11,7 +11,7 @@ Given John’s elevated privileges, he may:
 ---
 
 ## 📊 Step 1: File Archiving Detection
-This step identifies the creation of ZIP files on the target system, focusing on filenames that suggest potential staging of sensitive data. By querying DeviceFileEvents and filtering by .zip extensions, I began to establish a baseline of archiving activity and flag any anomalies for further investigation:
+Starting with the data archiving hypothesis, this step identifies the creation of ZIP files on the target system, focusing on filenames that suggest potential staging of sensitive data. By querying DeviceFileEvents and filtering by .zip extensions, I began to establish a baseline of archiving activity and flag any anomalies for further investigation:
 
 ```kql
 DeviceFileEvents
@@ -46,37 +46,6 @@ This query establishes the timeline of processes running on the endpoint around 
 <br>
 
 ---
-
-I searched +/-5 minutes around that time period for any evidence of exfiltration from the network (DeviceNetworkEvents) but didn't find any logs that indicated that data exfiltration in the network logs. 
-
-```kql
-let specificTime = datetime(2025-05-27T13:59:31.421716Z);
-let VMName = "pvr-hunting";
-DeviceNetworkEvents
-| where Timestamp between ((specificTime - 5m) .. (specificTime + 5m))
-| where DeviceName == VMName
-| order by Timestamp desc
-```
-
----
-
-I refined the query to focus on DeviceFileEvents in order to investigate file-related activity near the identified event timestamp. The query filters for events on the target device within a ±1-minute window around the anchor time, and projects only the most relevant fields for analyzing file interactions and their associated process command lines.
-
-```kql
-let specificTime = datetime(2025-05-27T13:59:31.421716Z);
-let VMName = "pvr-hunting";
-DeviceFileEvents
-| where Timestamp between ((specificTime - 1m) .. (specificTime + 1m))
-| where DeviceName == "pvr-hunting"
-| order by Timestamp desc
-| project Timestamp, DeviceName, ActionType, FileName, InitiatingProcessCommandLine
-```
-![Detected Silent Download of 7zip](images/SilentDownload.png)
-
-I discovered silent installation of 7-Zip (`7z2408-x64.exe`) followed by compression via `7z.exe`. The process timeline provides critical insight into how the attacker leveraged PowerShell to silently install 7-Zip and initiate data staging. This supports the hypothesis of intentional preparation for exfiltration.
-
----
-
 ## 🎯 Step 3: Filtered Relevant Process Events
 After identifying the ZIP creation and surrounding activity, this step narrows the focus to three specific processes likely involved in staging or facilitating exfiltration. By isolating powershell.exe, 7z2408-x64.exe, and 7z.exe, I expose the tools used to script, install, and compress data — helping me validate the attacker’s method and intent:
 
