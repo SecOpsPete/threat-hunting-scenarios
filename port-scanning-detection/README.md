@@ -92,11 +92,6 @@ DeviceProcessEvents
 
 ---
 
-### 📄 Script Observed on Host
-
-![Port Scan Script Code](images/PortScanScript.png)
-
----
 
 ### 🔐 Executed by SYSTEM Account
 When the device was correated to the user's AccountName, it was found that the portscan script was launched by the System account - not expected behavior or an activity originating from system administrators.  
@@ -113,11 +108,16 @@ DeviceProcessEvents
 | project DeviceName, Timestamp, FileName, InitiatingProcessCommandLine, AccountName
 ```
 
+### 📄 Script Observed on Host
+
+![Port Scan Script Code](images/PortScanScript.png)
+
+
 ---
 
 ### 🧼 Containment Status
 
-As such, the device was isolated and scanned in Defender for Endpoint. No malware was detected, but the system was quarantined and created a ticket for system reimaging.
+As such, the device was isolated and scanned in Defender for Endpoint. No malware was detected, but the system was quarantined and a ticket was created for system reimaging.
 
 ---
 
