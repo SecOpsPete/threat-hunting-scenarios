@@ -1,4 +1,4 @@
-# 🔍 Threat Hunting Lab: Suspicious Insider Exfiltration Attempt
+# 🔍 Suspicious Insider Exfiltration Attempt
 
 ## 🧭 Investigation Scenario
 **Context:** An employee named *John Doe*, recently placed on a performance improvement plan (PIP), displayed hostile behavior. Management suspects John may attempt to steal proprietary company data. As a security analyst, my goal was to investigate John’s actions on his assigned device (`pvr-hunting`) using Microsoft Defender for Endpoint (MDE).
