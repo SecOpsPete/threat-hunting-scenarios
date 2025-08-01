@@ -43,6 +43,8 @@ DeviceProcessEvents
 This query establishes the timeline of processes running on the endpoint around the time of the suspicious ZIP archive creation. By narrowing the window to one minute before and after the archive event, I begin to reveal a chain of activity. This step is critical to correlating user actions with file manipulation and prepares the foundation for identifying potential exfiltration behavior.
 <br>
 
+---
+
 I refined the query to focus on DeviceFileEvents in order to investigate file-related activity near the identified event timestamp. The query filters for events on the target device within a ±1-minute window around the anchor time, and projects only the most relevant fields for analyzing file interactions and their associated process command lines.
 
 ```kql
