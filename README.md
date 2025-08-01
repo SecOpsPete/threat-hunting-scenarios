@@ -17,7 +17,7 @@ A collection of hands-on threat hunting labs built around Microsoft Defender for
   Investigates PowerShell and 7-Zip usage to stage and exfiltrate sensitive employee data.
 
 - 🔐 **[Brute Force Detection](./brute-force-detection/README.md)**  
-  Detects suspicious authentication failures and patterns that indicate password guessing or brute force attacks.
+  Detection of suspicious authentication failures and patterns indicating password guessing or brute force attacks.
 
 - 🌐 **[Internal Port Scanning Detection](./port-scanning-detection/README.md)**  
   Identifies network reconnaissance activity within internal IP ranges using PowerShell port scanning.
