@@ -117,7 +117,7 @@ DeviceProcessEvents
 
 ### 🧼 Containment Status
 
-As such, the device was isolated and scanned in Defender for Endpoint. No malware was detected, but the system remains quarantined for reimaging.
+As such, the device was isolated and scanned in Defender for Endpoint. No malware was detected, but the system was quarantined and created a ticket for system reimaging.
 
 ---
 
