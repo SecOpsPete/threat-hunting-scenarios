@@ -38,7 +38,7 @@ DeviceProcessEvents
 | order by Timestamp desc
 ```
 
-![Timeline of PowerShell and Zip Activity](images/ProcessCorrelation2.png)
+![Timeline of PowerShell and Zip Activity](images/Query2rev.png)
 
 This query establishes the timeline of processes running on the endpoint around the time of the suspicious ZIP archive creation. By narrowing the window to one minute before and after the .zip archive event, I begin to reveal a chain of activity that involved a powershell scipt silently install 7zip and used it to archive employee data. This step is critical to correlating user actions with file manipulation and prepares the foundation for identifying potential exfiltration behavior.
 <br>
