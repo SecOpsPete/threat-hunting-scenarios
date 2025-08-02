@@ -1,6 +1,6 @@
 # 🧪 Unauthorized TOR Activity Detection
 
-Detects unsanctioned TOR browser installation and usage by correlating endpoint telemetry, process execution, and outbound network traffic. This lab demonstrates how security analysts can use Microsoft Defender for Endpoint (MDE) data and Sentinel analytics to investigate anonymization tools that may be used to evade monitoring and exfiltrate data.
+I designed this lab to detect unsanctioned TOR browser installation and usage by correlating endpoint telemetry, process execution, and outbound network traffic. This lab demonstrates how security analysts can use Microsoft Defender for Endpoint (MDE) data and Sentinel analytics to investigate anonymization tools that may be used to evade monitoring and exfiltrate data.
 
 <div align="center">
   <img src="./images/tor.png" alt="TOR Logo" width="30%">
@@ -31,7 +31,7 @@ The hunt was guided by the following high-level approach to identify Indicators 
 
 ### 🔎 Step 1: File Download and Creation Artifacts
 
-Using the `DeviceFileEvents` table, we filtered for file names containing the string `"tor"` on the device `pvr-hunting2`. This search returned evidence that the user `azurepeter` had downloaded the TOR installer executable:  
+Using the `DeviceFileEvents` table, I filtered for file names containing the string `"tor"` on the device `pvr-hunting2`. This search returned evidence that the user `azurepeter` had downloaded the TOR installer executable:  
 `tor-browser-windows-x86_64-portable-14.5.3.exe`.
 
 Additionally, two user-generated text files were found: `shoppinglist.txt`, which was later renamed to `TORshopping.txt`. This behavior may suggest either note-taking related to the installation or an attempt to obfuscate the file’s intent.
@@ -51,7 +51,7 @@ DeviceFileEvents
 
 ### 🛠️ Step 2: Silent Installation via Command Line
 
-We pivoted to the `DeviceProcessEvents` table to investigate how the TOR installer was executed. The logs showed that the installer was launched with the `/S` flag—commonly used for silent installation. This suggests an intentional attempt to install the application without displaying a GUI or triggering prompts.
+I pivoted to the `DeviceProcessEvents` table to investigate how the TOR installer was executed. The logs showed that the installer was launched with the `/S` flag—commonly used for silent installation. This suggests an intentional attempt to install the application without displaying a GUI or triggering prompts.
 
 ```kusto
 DeviceProcessEvents
@@ -82,7 +82,7 @@ DeviceProcessEvents
 
 ### 🌐 Step 4: TOR Network Access Confirmed via Port 9001
 
-To verify actual usage of the TOR network, we examined `DeviceNetworkEvents`. A network session initiated by `tor.exe` was successfully established to external IP address `68.8.241.30` over port `9001`, which is a well-known entry node port for the TOR network. Additional outbound connections occurred over ports 443 and 80, consistent with TOR traffic patterns.
+To verify actual usage of the TOR network, I examined `DeviceNetworkEvents`. A network session initiated by `tor.exe` was successfully established to external IP address `68.8.241.30` over port `9001`, which is a well-known entry node port for the TOR network. Additional outbound connections occurred over ports 443 and 80, consistent with TOR traffic patterns.
 
 ```kusto
 DeviceNetworkEvents
