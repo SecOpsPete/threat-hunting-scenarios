@@ -9,7 +9,7 @@
 ---
 
 ## 🧠 Scenario Overview
-Suspicious RDP activity against a cloud-hosted Windows system (`slflarewinsysmo`) escalated into full compromise. The attacker brute-forced valid credentials, executed a malicious binary, established persistence, impaired defenses, ran discovery commands, archived sensitive data, and attempted exfiltration to an external server. This hunt reconstructs the timeline, identifies the attacker’s techniques, and correlates Sysmon, Defender, and Sentinel telemetry to flag key adversary actions.
+Suspicious RDP activity against a cloud-hosted Windows system escalated into full compromise. The attacker brute-forced valid credentials, executed a malicious binary, established persistence, impaired defenses, ran discovery commands, archived sensitive data, and attempted exfiltration to an external server. This hunt reconstructs the timeline, identifies the attacker’s techniques, and correlates Sysmon, Defender, and Sentinel telemetry to flag key adversary actions.
 
 ---
 
