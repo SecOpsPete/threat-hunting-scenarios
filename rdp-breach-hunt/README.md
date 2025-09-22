@@ -54,7 +54,8 @@ DeviceLogonEvents
 | project Timestamp, DeviceName, AccountName, ActionType, LogonType, RemoteIP
 | order by Timestamp desc
 ````
-![Screenshot Placeholder – Flag 1](#)
+
+![Flag 1](Images/flag1.png)
 
 ---
 
@@ -63,7 +64,8 @@ DeviceLogonEvents
 
 **Finding:** The attacker successfully authenticated using the account `slflare`.  
 **KQL Query Used:** (same as Flag 1)  
-![Screenshot Placeholder – Flag 2](#)
+
+![Flag 1](Images/flag2.png)
 
 ---
 
@@ -80,7 +82,8 @@ DeviceProcessEvents
 | project Timestamp, DeviceName, AccountName, FileName, FolderPath, ProcessCommandLine
 | order by Timestamp asc
 ````
-![Screenshot Placeholder – Flag 3](#)
+
+![Flag 1](Images/flag3.png)
 
 ---
 
@@ -89,7 +92,8 @@ DeviceProcessEvents
 
 **Finding:** `"msupdate.exe" -ExecutionPolicy Bypass -File C:\Users\Public\update_check.ps1`  
 **KQL Query Used:** (derived from Flag 3 results)  
-![Screenshot Placeholder – Flag 4](#)
+
+![Flag 1](Images/flag4.png)
 
 ---
 
@@ -105,7 +109,7 @@ DeviceRegistryEvents
 | where RegistryValue contains "MicrosoftUpdateSync"
 | project Timestamp, RegistryKey, RegistryValueName, RegistryValueData
 ````
-![Screenshot Placeholder – Flag 5](#)
+![Flag 1](Images/flag5.png)
 
 ---
 
@@ -119,7 +123,7 @@ DeviceRegistryEvents
 | where RegistryKey contains "Microsoft\Windows Defender\Exclusions\Paths"
 | project Timestamp, DeviceName, RegistryKey, RegistryValueData
 ````
-![Screenshot Placeholder – Flag 6](#)
+![Flag 1](Images/flag6.png)
 
 ---
 
@@ -134,7 +138,8 @@ DeviceProcessEvents
 | where ProcessCommandLine contains "systeminfo"
 | project Timestamp, DeviceName, AccountName, ProcessCommandLine
 ````
-![Screenshot Placeholder – Flag 7](#)
+
+![Flag 1](Images/flag7.png)
 
 ---
 
@@ -148,7 +153,8 @@ DeviceFileEvents
 | where FileName == "backup_sync.zip"
 | project Timestamp, DeviceName, FolderPath, FileName, ActionType
 ````
-![Screenshot Placeholder – Flag 8](#)
+
+![Flag 1](Images/flag8.png)
 
 ---
 
@@ -164,7 +170,8 @@ DeviceNetworkEvents
 | project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteIP
 | order by Timestamp desc
 ````
-![Screenshot Placeholder – Flag 9](#)
+
+![Flag 1](Images/flag9.png)
 
 ---
 
@@ -181,7 +188,7 @@ DeviceNetworkEvents
 | where RemotePort == 8081
 | project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteIP, RemotePort
 ````
-![Screenshot Placeholder – Flag 10](#)
+![Flag 1](Images/flag9_and_10.png)
 
 ---
 
