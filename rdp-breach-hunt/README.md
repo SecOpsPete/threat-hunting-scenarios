@@ -40,6 +40,8 @@ The adversary gained access via brute-forced RDP credentials (`slflare`), execut
 ### 🚩 Flag 1 – Attacker IP Address
 **MITRE Technique:** T1110.001 – Brute Force: Password Guessing  
 
+The query inspects RDP logon events on the flare host to identify the external IP that successfully brute-forced access. This isolates the attacker’s source infrastructure.
+
 **Finding:** Successful RDP login from external IP `159.26.106.84` after repeated failures.  
 **KQL Query Used:**
 ````kql
@@ -62,6 +64,8 @@ DeviceLogonEvents
 ### 🚩 Flag 2 – Compromised Account
 **MITRE Technique:** T1078 – Valid Accounts  
 
+The same logon data shows which valid account was used in the successful login. This confirms the adversary leveraged slflare credentials to gain access.
+
 **Finding:** The attacker successfully authenticated using the account `slflare`.  
 **KQL Query Used:** (same as Flag 1)  
 
@@ -71,6 +75,8 @@ DeviceLogonEvents
 
 ### 🚩 Flag 3 – Executed Binary
 **MITRE Techniques:** T1059.003 – Windows Command Shell, T1204.002 – User Execution  
+
+Process creation events are queried to uncover suspicious executables launched by the compromised user. This exposes msupdate.exe as the attacker’s payload.
 
 **Finding:** The attacker executed a suspicious binary `msupdate.exe`.  
 **KQL Query Used:**
@@ -90,6 +96,8 @@ DeviceProcessEvents
 ### 🚩 Flag 4 – Command Line Used
 **MITRE Technique:** T1059 – Command and Scripting Interpreter  
 
+The query extracts the full command line parameters tied to the malicious binary execution. This reveals the attacker’s intent to bypass execution policy and run a PowerShell script.
+
 **Finding:** `"msupdate.exe" -ExecutionPolicy Bypass -File C:\Users\Public\update_check.ps1`  
 **KQL Query Used:** (derived from Flag 3 results)  
 
@@ -99,6 +107,8 @@ DeviceProcessEvents
 
 ### 🚩 Flag 5 – Scheduled Task Created
 **MITRE Technique:** T1053.005 – Scheduled Task  
+
+Registry event data is searched for TaskCache entries to detect persistence mechanisms. This highlights the attacker’s creation of the MicrosoftUpdateSync scheduled task.
 
 **Finding:** Scheduled Task `MicrosoftUpdateSync` was created for persistence.  
 **KQL Query Used:**
@@ -116,6 +126,8 @@ DeviceRegistryEvents
 ### 🚩 Flag 6 – Defender Exclusion Path
 **MITRE Technique:** T1562.001 – Impair Defenses: Disable or Modify Tools  
 
+Registry modifications are reviewed to detect Defender configuration changes. This shows the adversary weakening defenses by excluding C:\Windows\Temp from scanning.
+
 **Finding:** Defender exclusion added for path `C:\Windows\Temp`.  
 **KQL Query Used:**
 ````kql
@@ -129,6 +141,8 @@ DeviceRegistryEvents
 
 ### 🚩 Flag 7 – Discovery Command
 **MITRE Technique:** T1082 – System Information Discovery  
+
+Process events are filtered for cmd.exe with the systeminfo argument. This identifies the attacker’s reconnaissance activity to learn system details.
 
 **Finding:** Attacker ran discovery using `cmd.exe /c systeminfo`.  
 **KQL Query Used:**
@@ -146,6 +160,8 @@ DeviceProcessEvents
 ### 🚩 Flag 8 – Archive File Created
 **MITRE Technique:** T1074.001 – Data Staged: Local Data Staging  
 
+File creation logs are queried to spot sensitive data being staged. This captures the creation of backup_sync.zip as a precursor to exfiltration.
+
 **Finding:** Sensitive data staged into `backup_sync.zip` in AppData Temp directory.  
 **KQL Query Used:**
 ````kql
@@ -160,6 +176,8 @@ DeviceFileEvents
 
 ### 🚩 Flag 9 – C2 Destination
 **MITRE Technique:** T1071.001 – Application Layer Protocol: Web Protocols  
+
+Network events are inspected for outbound connections to known malicious IPs. This confirms contact with external C2 infrastructure at 185.92.220.87.
 
 **Finding:** Outbound traffic to `185.92.220.87` observed from compromised host.  
 **KQL Query Used:**
@@ -177,6 +195,8 @@ DeviceNetworkEvents
 
 ### 🚩 Flag 10 – Exfiltration Attempt
 **MITRE Technique:** T1048.003 – Exfiltration Over Unencrypted Protocol  
+
+The query isolates curl.exe network activity on port 8081. This directly exposes the attacker’s attempt to exfiltrate the staged archive to their server.
 
 **Finding:** `curl.exe` attempted to POST `backup_sync.zip` to `185.92.220.87:8081`.  
 **KQL Query Used:**
