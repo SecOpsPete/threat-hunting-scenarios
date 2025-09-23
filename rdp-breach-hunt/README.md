@@ -147,9 +147,10 @@ Process events are filtered for cmd.exe with the systeminfo argument. This ident
 **KQL Query Used:**
 ````kql
 DeviceProcessEvents
-| where FileName == "cmd.exe"
-| where ProcessCommandLine contains "systeminfo"
-| project Timestamp, DeviceName, AccountName, ProcessCommandLine
+| where DeviceName contains "flare"
+| where Timestamp between (datetime(2025-09-16 19:30:00) .. datetime(2025-09-16 19:50:00))
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine
+| order by Timestamp asc
 ````
 
 ![Flag 1](Images/flag7.png)
@@ -164,9 +165,12 @@ File creation logs are queried to spot sensitive data being staged. This capture
 **Finding:** Sensitive data staged into `backup_sync.zip` in AppData Temp directory.  
 **KQL Query Used:**
 ````kql
-DeviceFileEvents
-| where FileName == "backup_sync.zip"
-| project Timestamp, DeviceName, FolderPath, FileName, ActionType
+DeviceProcessEvents
+| where AccountName == "slflare"
+| where Timestamp between (datetime(2025-09-16) .. datetime(2025-09-19))
+| where ProcessCommandLine has_any (".zip",".rar","7z")
+| project Timestamp, DeviceName, AccountName, FileName, ProcessCommandLine
+| order by Timestamp desc 
 ````
 
 ![Flag 1](Images/flag8.png)
@@ -183,9 +187,9 @@ Network events are inspected for outbound connections to known malicious IPs. Th
 ````kql
 DeviceNetworkEvents
 | where DeviceName contains "flare"
-| where RemoteIP == "185.92.220.87"
-| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteIP
-| order by Timestamp desc
+| where Timestamp between (datetime(2025-09-16) .. datetime(2025-09-19))
+| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteIP, RemotePort, ActionType
+| order by Timestamp asc
 ````
 
 ![Flag 1](Images/flag9.png)
@@ -202,10 +206,10 @@ The query isolates curl.exe network activity on port 8081. This directly exposes
 ````kql
 DeviceNetworkEvents
 | where DeviceName contains "flare"
-| where InitiatingProcessFileName == "curl.exe"
 | where RemoteIP == "185.92.220.87"
-| where RemotePort == 8081
-| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteIP, RemotePort
+| where Timestamp between (datetime(2025-09-16) .. datetime(2025-09-19))
+| project Timestamp, DeviceName, InitiatingProcessFileName, InitiatingProcessCommandLine, RemoteIP, RemotePort, ActionType
+| order by Timestamp desc 
 ````
 ![Flag 1](Images/flag9_and_10.png)
 
