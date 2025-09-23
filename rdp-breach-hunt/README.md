@@ -101,8 +101,6 @@ The query extracts the full command line parameters tied to the malicious binary
 **Finding:** `"msupdate.exe" -ExecutionPolicy Bypass -File C:\Users\Public\update_check.ps1`  
 **KQL Query Used:** (derived from Flag 3 results)  
 
-![Flag 1](Images/flag4.png)
-
 ---
 
 ### 🚩 Flag 5 – Scheduled Task Created
