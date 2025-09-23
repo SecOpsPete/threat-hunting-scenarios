@@ -112,10 +112,11 @@ Registry event data is searched for TaskCache entries to detect persistence mech
 **KQL Query Used:**
 ````kql
 DeviceRegistryEvents
-| where DeviceName == "slflarewinsysmo"
-| where RegistryKey contains "TaskCache\Tree"
-| where RegistryValue contains "MicrosoftUpdateSync"
-| project Timestamp, RegistryKey, RegistryValueName, RegistryValueData
+| where DeviceName contains "flare"
+| where Timestamp between (datetime(2025-09-16 12:45:00) .. datetime(2025-09-17 23:59:59))
+| where RegistryKey contains "TaskCache"
+| project Timestamp, DeviceName, ActionType, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessFileName, InitiatingProcessCommandLine, InitiatingProcessAccountName
+| order by Timestamp asc
 ````
 ![Flag 1](Images/flag5.png)
 
