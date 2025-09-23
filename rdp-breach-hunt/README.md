@@ -131,8 +131,8 @@ Registry modifications are reviewed to detect Defender configuration changes. Th
 **KQL Query Used:**
 ````kql
 DeviceRegistryEvents
-| where RegistryKey contains "Microsoft\Windows Defender\Exclusions\Paths"
-| project Timestamp, DeviceName, RegistryKey, RegistryValueData
+| where RegistryKey contains "Exclusion"
+| where Timestamp between (datetime(2025-09-16 12:45:00) .. datetime(2025-09-19 23:59:59))
 ````
 ![Flag 1](Images/flag6.png)
 
