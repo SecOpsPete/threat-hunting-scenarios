@@ -1,5 +1,9 @@
 # 🕵️‍♂️ Threat Hunt Report: **Hide Your RDP – Password Spray Leads to Full Compromise**
 
+<p align="center">
+  <img src="./Images/rdp_hacker.png" alt="RDP_Attack" width="80%">
+</p>
+
 **Analyst:** Peter Van Rossum  
 **Date Completed:** 21-September-2025  
 **Environment Investigated:** An Azure-based enterprise cloud environment representing a modern corporate network with roughly 1,000 licensed endpoints under centralized security management. The environment integrates Microsoft Defender for Endpoint (MDE) for host-level telemetry and protection, and Microsoft Sentinel as the SIEM/SOAR platform for log aggregation, correlation, and incident response. 
