@@ -4,7 +4,7 @@ A collection of hands-on threat hunting labs built around Microsoft Defender for
 
 ## 🔍 Included Labs
 
-- 🛡️ **[RDP Breach Hunt](./rdp-breach-hunt/README.md)**  
+- 🛡️ **[RDP Breach Hunt - CTF](./rdp-breach-hunt/README.md)**  
   Investigates an external password spray leading to successful RDP compromise on host **flare**, mapping each stage of attacker activity with KQL queries and MITRE ATT&CK techniques.
 
 - 🕵️‍♂️ **[The Invisible RDP](./the-invisible-rdp)**  
