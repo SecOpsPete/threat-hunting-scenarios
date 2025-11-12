@@ -432,14 +432,4 @@ Expanding the query to include other extensions including `.lnk` files revealed 
 5. Block or monitor connections to `100.29.147.161` and similar endpoints; surface and hunt for `msftconnecttest` anomalies.  
 6. Implement detection rules for short-lived `Get-Clipboard` calls, parent-process correlation, and `-ExecutionPolicy` usage in PowerShell invocations.
 
----
 
-## 📎 Appendix
-
-- Key KQL snippets are included inline above for rapid reuse.  
-- Image placeholders reference `images/flag#.png` and will render once you add your images to the `images` folder.  
-- If you want, I can generate a polished PDF export or push this file into your repo under `/remote-support-backdoor/README.md`.
-
----
-
-*Report complete.*
