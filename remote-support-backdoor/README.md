@@ -50,7 +50,7 @@ Key takeaways:
 | Flag7  | Initiating process unique ID | 2533274790397065 |
 | Flag8  | Runtime application inventory | tasklist.exe |
 | Flag9  | Privilege mapping timestamp | 2025-10-09T12:52:14.3135459Z |
-| Flag10 | Connectivity check / C2 probe | www.msftconnecttest.com |
+| Flag10 | Connectivity check / C2 probe | www[.]msftconnecttest[.]com |
 | Flag11 | Data staging location | C:\Users\Public\ReconArtifacts.zip |
 | Flag12 | Outbound destination (simulated upload) | 100.29.147.161 |
 | Flag13 | Scheduled task persistence | SupportToolUpdater |
