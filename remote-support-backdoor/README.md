@@ -1,4 +1,8 @@
-# 🛠️ Threat Hunt Report: Remote Support Misdirection — *“The Support Session That Wasn't”*
+# 🛠️ Threat Hunt Report: Remote Support Misdirection — *“The Un-Help Desk”*
+
+<p align="center">
+  <img src="./images/Unhelp_Desk.png" alt="Unhelp Desk" width="80%">
+</p>
 
 **Analyst:** Peter Van Rossum (SecOpsPete)  
 **Date Completed:** October 2025  
@@ -76,7 +80,7 @@ DeviceFileEvents
 Processes originating from Downloads folders were seen across multiple hosts. The earliest obvious script write and execution I found was on gab-intern-vm — an intern-operated VM consistent with the starting intel. This host anchors the timeline and is the logical hunting start point.
 
 **Evidence:**  
-![Flag0](images/flag0.png)
+![Flag0](images/0.png)
 
 ---
 
@@ -98,7 +102,7 @@ DeviceProcessEvents
 I detected a PowerShell invocation that explicitly included `-ExecutionPolicy Bypass`, which bypasses local execution policy restrictions and is commonly used by operators to run scripts without changing local policy settings permanently.
 
 **Evidence:**  
-![Flag1](images/flag1.png)
+![Flag1](images/1.png)
 
 ---
 
@@ -119,7 +123,10 @@ DeviceFileEvents
 A `.lnk` shortcut named DefenderTamperArtifact.lnk was created in a user-accessible area. The presence of a manually-accessed shortcut suggests an attempt to obscure or hand-off execution logic; treat such artifacts as indicators of intent to tamper even if Defender configuration does not show permanent changes.
 
 **Evidence:**  
-![Flag2](images/flag2.png)
+![Flag2](images/2.png)
+<br>
+
+![Flag15](images/2a.png)
 
 ---
 
@@ -140,7 +147,7 @@ DeviceProcessEvents
 I observed a short-lived PowerShell process invoking `Get-Clipboard`. Clipboard reads are noisy but transient — they can capture tokens, URLs, or credentials that a user recently copied, making them a high-value quick probe for an operator.
 
 **Evidence:**  
-![Flag3](images/flag3.png)
+![Flag3](images/3.png)
 
 ---
 
@@ -152,7 +159,7 @@ I observed a short-lived PowerShell process invoking `Get-Clipboard`. Clipboard 
 This precise timestamp anchors a sequence of reconnaissance commands I used to pull surrounding telemetry (parent process, subsequent file writes). Use it as a pivot to query ±2 minutes for adjacent activities (clipboard checks, netstat-like calls, and tasklist snapshots).
 
 **Evidence:**  
-![Flag4](images/flag4.png)
+![Flag4](images/4.png)
 
 ---
 
@@ -173,7 +180,7 @@ DeviceProcessEvents
 I observed a `wmic logicaldisk` invocation that enumerated drive letters and free space. This is consistent with an operator mapping the host’s storage surface and deciding where to stage or collect data.
 
 **Evidence:**  
-![Flag5](images/flag5.png)
+![Flag5](images/5.png)
 
 ---
 
@@ -194,7 +201,7 @@ DeviceProcessEvents
 The initiating parent process matched RuntimeBroker.exe, suggesting the operator either leveraged an existing session agent or invoked functionality that looked like a session check. This aligns with a session visibility probe prior to collection attempts.
 
 **Evidence:**  
-![Flag6](images/flag6.png)
+![Flag6](images/6.png)
 
 ---
 
@@ -215,7 +222,7 @@ DeviceProcessEvents
 I extracted an initiating process ID tied to an interactive-session check. The presence of session enumeration commands supports the idea that the operator wanted to know who was logged in and whether it was safe to perform noisy actions.
 
 **Evidence:**  
-![Flag7](images/flag7.png)
+![Flag7](images/7.png)
 
 ---
 
@@ -236,7 +243,7 @@ DeviceProcessEvents
 I observed `tasklist.exe` snapshots that captured running processes. These quick inventories are useful for avoiding noisy or protected processes and identifying candidate artifacts for collection.
 
 **Evidence:**  
-![Flag8](images/flag8.png)
+![Flag8](images/8.png)
 
 ---
 
@@ -257,7 +264,7 @@ DeviceProcessEvents
 This timestamp marks the earliest privilege-mapping attempts I found. Privilege context informed the operator’s next steps and indicated whether elevation attempts were necessary.
 
 **Evidence:**  
-![Flag9](images/flag9.png)
+![Flag9](images/9.png)
 
 ---
 
@@ -278,7 +285,7 @@ DeviceNetworkEvents
 The host contacted `www.msftconnecttest.com` — a common connectivity probe used by systems but also abused by operators to test outbound reachability without raising immediate suspicion. I used the surrounding telemetry to find simultaneous evidence of screenshots and data-gathering that suggest proof‑of‑access activity.
 
 **Evidence:**  
-![Flag10](images/flag10.png)
+![Flag10](images/10.png)
 
 ---
 
@@ -298,7 +305,7 @@ DeviceFileEvents
 I observed a zip archive created in C:\Users\Public. Staging in a public folder simplifies later retrieval and is a strong indicator of preparation for exfiltration.
 
 **Evidence:**  
-![Flag11](images/flag11.png)
+![Flag11](images/11.png)
 
 ---
 
@@ -319,7 +326,7 @@ DeviceNetworkEvents
 I observed outbound attempts to 100.29.147.161 (simulated upload). Even if the transfer failed, the attempt is proof of intent and reveals possible egress vectors to block or monitor.
 
 **Evidence:**  
-![Flag12](images/flag12.png)
+![Flag12](images/12.png)
 
 ---
 
@@ -339,7 +346,7 @@ DeviceProcessEvents
 I found evidence of a scheduled task named SupportToolUpdater. This provides the actor a way to re-run their tooling without interactive access, extending the threat window beyond the initial session.
 
 **Evidence:**  
-![Flag13](images/flag13.png)
+![Flag13](images/13.png)
 
 ---
 
@@ -360,7 +367,7 @@ DeviceRegistryEvents
 A registry Run key named RemoteAssistUpdater was present as a fallback persistence mechanism. Redundant persistence increases resilience and should be removed and monitored.
 
 **Evidence:**  
-![Flag14](images/flag14.png)
+![Flag14](images/14.png)
 
 ---
 
@@ -380,7 +387,19 @@ DeviceFileEvents
 An explanatory file (SupportChat_log.lnk) was left near the time of suspicious actions. The artifact appears timed to justify the operator’s activities — a classic example of narrative control. Focus on timing and parent processes rather than accepting the content at face value.
 
 **Evidence:**  
-![Flag15](images/flag15.png)
+I first queried `DeviceFileEvents` for `.txt`, `.docx`, and `.pdf` files created during attacker activity and surfaced `SupportChat_log.txt`, which appeared to be a user-facing artifact opened via Notepad. 
+
+![Flag15](images/15a.png)
+<br>
+
+When submitting that filename returned an error “Almost… but not quite,” I realized the challenge was rejecting the visible file and likely pointing to a disguised or alternate version. 
+
+![Flag15](images/15aa.png)
+<br>
+
+Expanding the query to include other extensions including `.lnk` files revealed `SupportChat_log.lnk` — a shortcut opened from the Recent folder — confirming it as the true planted narrative artifact.
+
+![Flag15](images/15b.png)
 
 ---
 
