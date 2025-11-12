@@ -456,6 +456,44 @@ Expanding the query to include other extensions including `.lnk` files revealed 
 
 ---
 
+## 🔎 MITRE ATT&CK Mapping
+
+The table below maps observed adversary actions in this scenario to MITRE ATT&CK techniques, with short investigator notes and hunting/detection hints.
+
+- **T1059.001 — Command and Scripting Interpreter: PowerShell.**  
+  *Observed:* `powershell.exe -NoProfile -Sta -Command "try { Get-Clipboard | Out-Null } catch { }"` and other in-memory PowerShell invocations (ExecutionPolicy bypass).  
+  *Why it matters / hunt tip:* PowerShell usage with `-NoProfile`/encoded or INLINE commands and explicit `-ExecutionPolicy Bypass` strongly suggests living-off-the-land execution and defense evasion; correlate parent/child processes and command arguments to detect anomalous interactive/scripted execution. :contentReference[oaicite:0]{index=0}
+
+- **T1059.003 — Command and Scripting Interpreter: Windows Command Shell (cmd.exe).**  
+  *Observed:* `cmd.exe /c wmic logicaldisk get name,freespace,size`, `cmd.exe /c systeminfo` used for discovery and storage mapping.  
+  *Why it matters / hunt tip:* cmd.exe can be used for discovery and staging orchestration. Monitor uncommon cmd.exe invocations from non-administrative users and time-window anomalies; link `wmic` and `systeminfo` calls to parent process context. :contentReference[oaicite:1]{index=1}
+
+- **T1115 — Clipboard Data.**  
+  *Observed:* Short, transient PowerShell clipboard reads (`Get-Clipboard`) consistent with opportunistic data probes.  
+  *Why it matters / hunt tip:* Clipboard collection is a low-footprint reconnaissance technique (tokens, URLs, credentials). Pivot on very short process lifetimes and parent/child chains around `Get-Clipboard` or `clip.exe`. :contentReference[oaicite:2]{index=2}
+
+- **T1053 (and sub-techniques) — Scheduled Task/Job.**  
+  *Observed:* Creation of a scheduled task (e.g., `SupportToolUpdater`) used to re-execute tooling on a schedule.  
+  *Why it matters / hunt tip:* Scheduled tasks are a common persistence mechanism. Search for recently created/modified tasks, unusual task names, or tasks invoking scripts from public user folders; validate task triggers and associated accounts. :contentReference[oaicite:3]{index=3}
+
+- **T1547.001 — Boot or Logon Autostart Execution: Registry Run Keys / Startup Folder.**  
+  *Observed:* Lightweight autorun fallback (registry Run key / startup-area entry such as `RemoteAssistUpdater`) consistent with a redundant persistence channel.  
+  *Why it matters / hunt tip:* Run keys and startup folder entries are frequently abused as secondary persistence. Track creation/modification of known Run key locations and suspicious values referencing user profile `Downloads` or public folders. :contentReference[oaicite:4]{index=4}
+
+- **T1074.001 — Local Data Staging (Data Staged).**  
+  *Observed:* Consolidation of artifacts into `C:\Users\Public\ReconArtifacts.zip` prior to attempted upload.  
+  *Why it matters / hunt tip:* Staging in public/shared folders reduces friction for exfiltration. Hunt for archive creation events, copies into `C:\Users\Public`, and compress/archive commands executed immediately before network egress attempts. :contentReference[oaicite:5]{index=5}
+
+- **T1048 — Exfiltration Over Alternative Protocols / C2 (http(s), custom).**  
+  *Observed:* Outbound HTTP/HTTPS connection attempts to unusual IPs and domains (simulated upload behavior).  
+  *Why it matters / hunt tip:* Outbound connections to rare or newly observed IPs/domains after staging should be treated as potential exfil/C2; inspect process context (PowerShell, curl, cmd) and user agent strings, and correlate with firewall/IDS logs. :contentReference[oaicite:6]{index=6}
+
+- **T1082 — System Information Discovery.**  
+  *Observed:* Use of `systeminfo`, `ipconfig`, and other environment probes to collect host and account context for follow-on activity.  
+  *Why it matters / hunt tip:* Discovery commands typically precede lateral movement or targeted collection; anchor timelines on these commands and expand searches ±5 minutes for parent/child related activity. :contentReference[oaicite:7]{index=7}
+
+---
+
 ## ✅ Recommended Immediate Actions
 
 1. Remove scheduled task `SupportToolUpdater` and the `RemoteAssistUpdater` Run key. Investigate the creator account and associated timestamps.  
