@@ -4,6 +4,9 @@ A collection of hands-on threat hunting labs built around Microsoft Defender for
 
 ## 🔍 Included Labs
 
+- 🛡️ **[Remote Support Backdoor - CTF](./remote-support-backdoor/README.md)**  
+  Reconstructs a staged “remote support” session that functioned as a misdirection; I trace initial script execution (ExecutionPolicy bypass), quick clipboard probes, artifact staging in public folders, outbound reachability checks, and layered persistence (scheduled task + autorun). Each step is accompanied by KQL pivots, analyst notes, and evidence images.
+
 - 🛡️ **[RDP Breach Hunt - CTF](./rdp-breach-hunt/README.md)**  
   Investigates an external password spray leading to successful RDP compromise on host **flare**, mapping each stage of attacker activity with KQL queries and MITRE ATT&CK techniques.
 
