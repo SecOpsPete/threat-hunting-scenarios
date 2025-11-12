@@ -71,9 +71,9 @@ Key takeaways:
 ```kusto
 DeviceFileEvents
 | where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-16))
-| where FileName contains "SupportTool.ps1" or FileName has_any ("desk","help","support","tool")
-| project TimeGenerated, DeviceName, FileName, FolderPath
-| order by TimeGenerated asc
+| where FolderPath contains @"\Downloads"
+| where FolderPath has_any ("desk", "help", "support", "tool")
+| order by TimeGenerated desc
 ```
 
 **What I found / narrative:**  
@@ -91,9 +91,9 @@ Processes originating from Downloads folders were seen across multiple hosts. Th
 **KQL (Process pivot):**
 ```kusto
 DeviceProcessEvents
+| where TimeGenerated between (datetime(2025-10-09T12:05:38Z) .. datetime(2025-10-16))
 | where DeviceName == "gab-intern-vm"
-| where TimeGenerated between (datetime(2025-10-09T12:00:00Z) .. datetime(2025-10-09T13:00:00Z))
-| where ProcessCommandLine contains "-ExecutionPolicy"
+| where InitiatingProcessAccountName == "g4bri3lintern"
 | project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessAccountName
 | order by TimeGenerated asc
 ```
@@ -114,8 +114,8 @@ I detected a PowerShell invocation that explicitly included `-ExecutionPolicy By
 ```kusto
 DeviceFileEvents
 | where DeviceName == "gab-intern-vm"
-| where FileName endswith ".lnk" and FolderPath has "Shortcuts" or FolderPath has "Recent"
-| project TimeGenerated, FileName, FolderPath, InitiatingProcessFileName
+| where TimeGenerated between (datetime(2025-10-09 12:29:00) .. datetime(2025-10-09 12:36:00))
+| project TimeGenerated, ActionType, FileName, FolderPath, InitiatingProcessFileName, InitiatingProcessCommandLine
 | order by TimeGenerated asc
 ```
 
@@ -137,9 +137,9 @@ A `.lnk` shortcut named DefenderTamperArtifact.lnk was created in a user-accessi
 **KQL (Clipboard probe):**
 ```kusto
 DeviceProcessEvents
-| where DeviceName == "gab-intern-vm" and FileName == "powershell.exe"
-| where ProcessCommandLine contains "Get-Clipboard" or ProcessCommandLine contains "Get-Clipboard -"
-| project TimeGenerated, InitiatingProcessFileName, ProcessCommandLine, InitiatingProcessAccountName
+| where TimeGenerated between (datetime(2025-10-09T00:00:00Z) .. datetime(2025-10-10T00:00:00Z))
+| where ProcessCommandLine has_any ("Get-Clipboard","GetClipboard","Get-ClipBoard","clip.exe","Get-Clipboard|Out-Null")
+| project TimeGenerated, DeviceName, FileName, ProcessCommandLine, InitiatingProcessAccountName, InitiatingProcessParentFileName, InitiatingProcessRemoteSessionIP
 | order by TimeGenerated asc
 ```
 
@@ -154,6 +154,15 @@ I observed a short-lived PowerShell process invoking `Get-Clipboard`. Clipboard 
 ### Flag 4 — Host Context Recon (timestamp)
 **Objective:** Recon timestamp  
 **Flag:** 2025-10-09T12:51:44.3425653Z
+
+```kusto
+DeviceProcessEvents
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-16))
+| where ProcessCommandLine has_any ("whois","whoami","qwinsta","quser","query user","hostname","ipconfig","systeminfo","net user")
+| project TimeGenerated, InitiatingProcessFileName, ProcessCommandLine
+| sort by TimeGenerated desc
+```
 
 **What I found / narrative:**  
 This precise timestamp anchors a sequence of reconnaissance commands I used to pull surrounding telemetry (parent process, subsequent file writes). Use it as a pivot to query ±2 minutes for adjacent activities (clipboard checks, netstat-like calls, and tasklist snapshots).
@@ -170,10 +179,15 @@ This precise timestamp anchors a sequence of reconnaissance commands I used to p
 **KQL (Storage mapping):**
 ```kusto
 DeviceProcessEvents
-| where DeviceName == "gab-intern-vm"
-| where ProcessCommandLine contains "wmic logicaldisk get name"
-| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessAccountName
-| order by TimeGenerated asc
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-16))
+| where tolower(DeviceName) has_any ("gab","baju") 
+| where ProcessCommandLine has_any (
+    "net view","net use","net share",
+    "Get-PSDrive","Get-SmbShare","Get-Volume","Get-ChildItem",
+    "wmic logicaldisk","fsutil","dir \\\\","dir C:\\Users","mountvol","net view /all"
+  )
+| project TimeGenerated, DeviceName, InitiatingProcessFileName, ProcessCommandLine
+| sort by TimeGenerated asc
 ```
 
 **What I found / narrative:**  
@@ -191,10 +205,11 @@ I observed a `wmic logicaldisk` invocation that enumerated drive letters and fre
 **KQL (Parent process / session probe):**
 ```kusto
 DeviceProcessEvents
-| where DeviceName == "gab-intern-vm"
-| where InitiatingProcessFileName == "RuntimeBroker.exe" or ProcessCommandLine contains "nslookup" or ProcessCommandLine contains "ipconfig"
-| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName
-| order by TimeGenerated asc
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-16))
+| where tolower(DeviceName) has_any ("gab","baju")
+| where ProcessCommandLine has_any ("nslookup","resolvednsname","resolve-dnsname","test-netconnection","test-connection","ping","tracert","curl","wget")
+| project TimeGenerated, DeviceName, InitiatingProcessFileName, ProcessCommandLine, InitiatingProcessParentFileName
+| sort by TimeGenerated asc
 ```
 
 **What I found / narrative:**  
@@ -213,8 +228,9 @@ The initiating parent process matched RuntimeBroker.exe, suggesting the operator
 ```kusto
 DeviceProcessEvents
 | where DeviceName == "gab-intern-vm"
-| where InitiatingProcessId == 2533274790397065 or ProcessCommandLine contains "query user" or ProcessCommandLine contains "qwinsta"
-| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessId, InitiatingProcessAccountName
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-16))
+| where ProcessCommandLine has_any ("quser","qwinsta","query session","query user","whoami","tscon","tsdiscon")
+| project TimeGenerated, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessUniqueId
 | order by TimeGenerated asc
 ```
 
@@ -234,8 +250,9 @@ I extracted an initiating process ID tied to an interactive-session check. The p
 ```kusto
 DeviceProcessEvents
 | where DeviceName == "gab-intern-vm"
-| where FileName in ("tasklist.exe","tasklist.exe")
-| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessFileName
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-16))
+| where ProcessCommandLine has_any ("tasklist","Get-Process","wmic process list","tasklist.exe")
+| project TimeGenerated, DeviceName, FileName, ProcessCommandLine, InitiatingProcessFileName, InitiatingProcessUniqueId
 | order by TimeGenerated asc
 ```
 
@@ -255,9 +272,11 @@ I observed `tasklist.exe` snapshots that captured running processes. These quick
 ```kusto
 DeviceProcessEvents
 | where DeviceName == "gab-intern-vm"
-| where ProcessCommandLine contains "whoami" or ProcessCommandLine contains "net user" or ProcessCommandLine contains "qwinsta"
-| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessAccountName
-| order by TimeGenerated asc
+| where TimeGenerated between (datetime(2025-10-01) .. datetime(2025-10-16))
+| where ProcessCommandLine has_any ("whoami","/priv","/groups","net localgroup","net user","token","privilege")
+| project TimeGenerated, FileName, ProcessCommandLine, InitiatingProcessCommandLine
+| sort by TimeGenerated asc
+| take 1
 ```
 
 **What I found / narrative:**  
@@ -276,8 +295,9 @@ This timestamp marks the earliest privilege-mapping attempts I found. Privilege 
 ```kusto
 DeviceNetworkEvents
 | where DeviceName == "gab-intern-vm"
-| where RemoteUrl has "msftconnecttest" or RemoteIP in ("100.29.147.161","185.92.220.87")
-| project TimeGenerated, RemoteIP, RemoteUrl, InitiatingProcessFileName, InitiatingProcessCommandLine
+| where TimeGenerated > datetime(2025-10-09 12:05:38)
+| where isnotempty(RemoteUrl)
+| project TimeGenerated, RemoteUrl, InitiatingProcessFileName, InitiatingProcessCommandLine
 | order by TimeGenerated asc
 ```
 
@@ -296,8 +316,10 @@ The host contacted `www.msftconnecttest.com` — a common connectivity probe use
 **KQL (Staging detection):**
 ```kusto
 DeviceFileEvents
-| where DeviceName == "gab-intern-vm" and FileName has "ReconArtifacts" or FileName endswith ".zip"
-| project TimeGenerated, FileName, FolderPath, InitiatingProcessFileName
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated > datetime(2025-10-09 12:05:38)
+| where FileName endswith ".zip" or FileName has "archive" or FileName has "bundle"
+| project TimeGenerated, FileName, FolderPath, InitiatingProcessFileName, InitiatingProcessCommandLine
 | order by TimeGenerated asc
 ```
 
@@ -317,8 +339,10 @@ I observed a zip archive created in C:\Users\Public. Staging in a public folder 
 ```kusto
 DeviceNetworkEvents
 | where DeviceName == "gab-intern-vm"
-| where RemoteIP == "100.29.147.161" or RemoteUrl contains "httpbin" or RemoteUrl contains "upload"
-| project TimeGenerated, RemoteIP, RemoteUrl, InitiatingProcessFileName, ProcessCommandLine
+| where TimeGenerated > datetime(2025-10-09 12:58:00)
+| where InitiatingProcessFileName in~ ("powershell.exe", "cmd.exe", "RunCommandExtension.exe")
+| where RemoteIP != "" or RemoteUrl != ""
+| project TimeGenerated, RemoteIP, RemoteUrl, InitiatingProcessFileName, InitiatingProcessCommandLine
 | order by TimeGenerated asc
 ```
 
@@ -337,8 +361,11 @@ I observed outbound attempts to 100.29.147.161 (simulated upload). Even if the t
 **KQL (Scheduled task detection):**
 ```kusto
 DeviceProcessEvents
-| where DeviceName == "gab-intern-vm" and ProcessCommandLine contains "schtasks" or FileName contains "schtasks.exe"
-| project TimeGenerated, ProcessCommandLine, InitiatingProcessFileName
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-09 13:00:00) .. datetime(2025-10-09 13:20:00))
+| where InitiatingProcessFileName =~ "powershell.exe"
+| where ProcessCommandLine has_any ("script40.ps1", "SupportTool.ps1", "exfiltratedata.ps1")
+| project TimeGenerated, InitiatingProcessFileName, ProcessCommandLine
 | order by TimeGenerated asc
 ```
 
@@ -358,8 +385,10 @@ I found evidence of a scheduled task named SupportToolUpdater. This provides the
 ```kusto
 DeviceRegistryEvents
 | where DeviceName == "gab-intern-vm"
-| where RegistryKey contains "Run" and RegistryValueName contains "RemoteAssistUpdater"
-| project TimeGenerated, RegistryKey, RegistryValueName, RegistryValueData
+| where TimeGenerated between (datetime(2025-10-09 12:50:00) .. datetime(2025-10-09 13:20:00))
+| where RegistryKey has_any ("Run", "RunOnce")
+| where RegistryValueName != ""
+| project TimeGenerated, RegistryKey, RegistryValueName, RegistryValueData, InitiatingProcessFileName
 | order by TimeGenerated asc
 ```
 
@@ -378,7 +407,11 @@ A registry Run key named RemoteAssistUpdater was present as a fallback persisten
 **KQL (Cover artifact detection):**
 ```kusto
 DeviceFileEvents
-| where DeviceName == "gab-intern-vm" and FileName has "SupportChat" or FileName has "SupportChat_log"
+| where DeviceName == "gab-intern-vm"
+| where TimeGenerated between (datetime(2025-10-09 12:50:00) .. datetime(2025-10-09 13:20:00))
+| where FileName endswith ".docx" or FileName endswith ".pdf" or FileName endswith ".rtf"
+   or FileName endswith ".html" or FileName endswith ".htm" or FileName endswith ".log"
+   or FileName endswith ".json" or FileName endswith ".lnk"
 | project TimeGenerated, FileName, FolderPath, InitiatingProcessFileName
 | order by TimeGenerated asc
 ```
